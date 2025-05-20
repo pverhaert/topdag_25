@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactief Pythagoras Leren</title>
+    <style>
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            margin: 0; 
+            padding: 0; 
+            background-color: #f0f8ff; /* AliceBlue */
+            color: #333; 
+            line-height: 1.6;
+        }
+        header { 
+            background: linear-gradient(135deg, #007bff, #0056b3); /* Blauw gradient */
+            color: white; 
+            padding: 25px 20px; 
+            text-align: center; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        header h1 { 
+            margin: 0; 
+            font-size: 2.2em;
+        }
+        header p {
+            font-size: 1.1em;
+            margin-top: 5px;
+        }
+        section { 
+            background-color: white; 
+            margin: 25px; 
+            padding: 25px; 
+            border-radius: 10px; 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.08); 
+        }
+        h2 { 
+            color: #0056b3; /* Donkerder blauw */
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+            margin-top: 0;
+        }
+        h3 { 
+            color: #0067cc; /* Iets lichter dan h2 */
+            margin-top: 20px;
+        }
+        canvas { 
+            border: 1px solid #b0c4de; /* LightSteelBlue */
+            margin-top: 15px; 
+            display: block; 
+            margin-left: auto; 
+            margin-right: auto; 
+            background-color: #fdfdfd;
+            border-radius: 5px;
+        }
+        button { 
+            background-color: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 12px 18px; 
+            margin: 10px 5px 0 0; 
+            border-radius: 5px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            transition: background-color 0.3s ease;
+        }
+        button:hover { 
+            background-color: #0056b3; 
+        }
+        button:disabled { 
+            background-color: #cccccc; 
+            cursor: not-allowed; 
+        }
+        input[type="number"] { 
+            padding: 10px; 
+            margin-top: 10px; 
+            border: 1px solid #b0c4de; 
+            border-radius: 4px; 
+            font-size: 16px;
+            width: 200px;
+        }
+        #feedbackArea { 
+            margin-top: 15px; 
+            font-weight: bold; 
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .correct { 
+            color: #28a745; /* Groen */
+            background-color: #e9f7ef;
+            border: 1px solid #a3d8b5;
+        }
+        .incorrect { 
+            color: #dc3545; /* Rood */
+            background-color: #fceaea;
+            border: 1px solid #f1b0b7;
+        }
+        #imageContainer { 
+            position: relative; 
+            width: 500px; /* Vaste breedte voor container */
+            max-width: 100%; /* Responsief */
+            height: auto; 
+            margin: 20px auto; 
+            border: 1px solid #b0c4de;
+            border-radius: 5px;
+            overflow: hidden; /* Zorgt dat canvas binnen de grenzen blijft */
+        }
+        #artworkImage { 
+            width: 100%; 
+            display: block; 
+        }
+        #goldenOverlayCanvas { 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%;
+            cursor: grab;
+            background-color: transparent; /* Toegevoegd voor transparantie */
+            border: none; /* Verwijder de standaard canvas border hier, die is niet nodig */
+        }
+        #goldenOverlayCanvas:active {
+            cursor: grabbing;
+        }
+        footer { 
+            text-align: center; 
+            padding: 25px; 
+            margin-top: 30px; 
+            background-color: #343a40; /* Donkergrijs */
+            color: #f8f9fa; /* Lichtgrijs */
+            font-size: 0.95em; 
+        }
+        hr { 
+            border: 0; 
+            height: 1px; 
+            background: #e0e0e0; 
+            margin: 40px 0; 
+        }
+        .controls div { 
+            margin-bottom: 10px;
+        }
+        .controls label { 
+            margin-right: 10px;
+            font-weight: 500;
+        }
+        .canvas-info p {
+            margin: 8px 0;
+            font-size: 1.05em;
+        }
+        .canvas-info span {
+            font-weight: bold;
+            color: #0056b3;
+        }
+         /* Responsive aanpassingen */
+        @media (max-width: 600px) {
+            section { margin: 15px; padding: 15px; }
+            header h1 { font-size: 1.8em; }
+            header p { font-size: 1em; }
+            button { padding: 10px 15px; font-size: 15px; }
+            input[type="number"] { width: calc(100% - 22px); } /* Volledige breedte minus padding/border */
+            #imageContainer { width: 90%; } /* Maak container smaller */
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Pythagoras Interactief</h1>
+        <p>Ontdek de stelling van Pythagoras en de Gulden Snede op een dynamische manier!</p>
+    </header>
+
+    <section id="verplaatsbare-driehoek">
+        <h2>De Dynamische Rechthoekige Driehoek 📐</h2>
+        <p>Versleep de blauwe (voor hoogte <i>a</i>) en rode (voor breedte <i>b</i>) punten om de rechthoekige driehoek aan te passen. De lengtes en de formule $a^2 + b^2 = c^2$ worden live bijgewerkt. Het groene punt is de rechte hoek (90°).</p>
+        <canvas id="pythagorasCanvas" width="400" height="300"></canvas>
+        <div class="canvas-info">
+            <p>Rechthoekszijde a: <span id="sideAVal"></span></p>
+            <p>Rechthoekszijde b: <span id="sideBVal"></span></p>
+            <p>Schuine zijde c: <span id="sideCVal"></span></p>
+            <p>Controle: <span id="pythagorasCheck">a² + b² = c²</span></p>
+        </div>
+    </section>
+
+    <hr>
+
+    <section id="oefenmodule">
+        <h2>Pythagoras Oefenmodule 🧠</h2>
+        <p>Test je kennis! Gegeven zijn twee zijden van een rechthoekige driehoek. Vul de lengte van de derde zijde in (rond af op 1 decimaal indien nodig) en controleer je antwoord.</p>
+        <div id="exerciseProblem" style="margin-bottom: 10px; font-weight:500;">
+            </div>
+        <input type="number" id="studentAnswer" placeholder="Jouw antwoord (bv. 5.0)">
+        <button id="submitAnswerBtn">Controleer Antwoord</button>
+        <div id="feedbackArea">
+            </div>
+    </section>
+
+    <hr>
+
+    <section id="kunst-design">
+        <h2>Pythagoras in Kunst & Design: De Gulden Snede ✨</h2>
+        <p>De invloed van Pythagoras reikt verder dan driehoeken. Een beroemd voorbeeld is de Gulden Snede ($\phi \approx 1.618$), een verhouding die vaak terugkomt in natuur, kunst en design voor esthetisch aangename composities.</p>
+
+        <article id="gulden-rechthoek-constructie">
+            <h3>Interactieve Constructie van een Gulden Rechthoek</h3>
+            <p>Volg de stappen om zelf een Gulden Rechthoek te maken. Ontdek hoe de stelling van Pythagoras een rol speelt bij het bepalen van een cruciale lengte.</p>
+            <canvas id="goldenRectangleCanvas" width="500" height="350"></canvas>
+            <div>
+                <button id="grReset">Reset</button>
+                <button id="grStep1">Stap 1: Teken Vierkant</button>
+                <button id="grStep2" disabled>Stap 2: Halveer Vierkant</button>
+                <button id="grStep3" disabled>Stap 3: Diagonaal (Pythagoras!)</button>
+                <button id="grStep4" disabled>Stap 4: Construeer Gulden Rechthoek</button>
+            </div>
+            <p id="grDiagonalCalc" class="canvas-info"></p>
+            <p id="goldenRatioValue" class="canvas-info"></p>
+        </article>
+
+        <article id="gulden-spiraal" style="margin-top:30px;">
+            <h3>Interactieve Constructie van een Gulden Spiraal</h3>
+            <p>Begin met een Gulden Rechthoek. Door steeds vierkanten af te splitsen en kwartcirkels te tekenen, ontstaat de prachtige Gulden Spiraal.</p>
+            <canvas id="goldenSpiralCanvas" width="500" height="310"></canvas> <div>
+                <button id="gsReset">Reset</button>
+                <button id="gsStart">Start met Gulden Rechthoek</button>
+                <button id="gsNextStep" disabled>Volgende Stap (Vierkant & Boog)</button>
+            </div>
+        </article>
+
+        <article id="gulden-snede-verkenner" style="margin-top:30px;">
+            <h3>Verken de Gulden Snede in de Mona Lisa</h3>
+            <p>Gebruik de goudkleurige overlay om de principes van de Gulden Snede te verkennen in de compositie van Leonardo da Vinci's Mona Lisa. Je kunt de overlay verslepen en de grootte aanpassen.</p>
+            <div id="imageContainer">
+                <img id="artworkImage" src="https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg/800px-Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg" alt="Mona Lisa">
+                <canvas id="goldenOverlayCanvas"></canvas>
+            </div>
+            <div class="controls">
+                <div><button id="toggleOverlay">Toon/Verberg Overlay</button></div>
+                <div><label for="overlayWidthSlider">Breedte Overlay:</label><input type="range" id="overlayWidthSlider" min="50" max="480" value="200"></div>
+                <div><p><em>Tip: Versleep de overlay en pas de grootte aan. Zie je hoe Leonardo mogelijk de Gulden Snede heeft gebruikt voor balans en focus?</em></p></div>
+            </div>
+        </article>
+    </section>
+
+    <footer>
+        <p>&copy; 2024 Interactief Pythagoras Leren. Geïnspireerd door 'Pythagoras in het dagelijks leven'.</p>
+    </footer>
+
+    <script>
+        // --- Deel 1: Dynamische Rechthoekige Driehoek ---
+        const pythagorasCanvas = document.getElementById('pythagorasCanvas');
+        const pythagorasCtx = pythagorasCanvas.getContext('2d');
+        const sideAVal = document.getElementById('sideAVal');
+        const sideBVal = document.getElementById('sideBVal');
+        const sideCVal = document.getElementById('sideCVal');
+        const pythagorasCheck = document.getElementById('pythagorasCheck');
+
+        // P0: Rechte hoek, P1: bepaalt lengte b, P2: bepaalt lengte a
+        let P0 = {x: 50, y: pythagorasCanvas.height - 50, color: 'green', radius: 7}; 
+        let P1 = {x: pythagorasCanvas.width - 100, y: pythagorasCanvas.height - 50, color: 'red', radius: 9}; 
+        let P2 = {x: 50, y: 50, color: 'blue', radius: 9}; 
+        let draggingPythagorasPoint = null;
+
+        function drawPythagorasTriangle() {
+            pythagorasCtx.clearRect(0,0,pythagorasCanvas.width, pythagorasCanvas.height);
+            
+            // De driehoekspunten zijn P0, P1, en (P0.x, P2.y)
+            const vertexRightAngle = P0;
+            const vertexHorizontal = P1;
+            const vertexVertical = { x: P0.x, y: P2.y }; // Het derde punt van de driehoek
+
+            // Zijden tekenen
+            pythagorasCtx.beginPath();
+            pythagorasCtx.moveTo(vertexRightAngle.x, vertexRightAngle.y);
+            pythagorasCtx.lineTo(vertexHorizontal.x, vertexHorizontal.y); // Zijde b
+            pythagorasCtx.lineTo(vertexVertical.x, vertexVertical.y);     // Schuine zijde c
+            pythagorasCtx.closePath(); // Sluit naar P0.x, P0.y voor zijde a
+            pythagorasCtx.strokeStyle = '#0056b3';
+            pythagorasCtx.lineWidth = 2.5;
+            pythagorasCtx.stroke();
+
+            // Rechte hoek markering (klein vierkantje)
+            pythagorasCtx.strokeStyle = '#333';
+            pythagorasCtx.lineWidth = 1.5;
+            const squareSize = 12;
+            if (vertexHorizontal.x > vertexRightAngle.x && vertexVertical.y < vertexRightAngle.y) { // Standaard kwadrant
+                 pythagorasCtx.strokeRect(vertexRightAngle.x, vertexRightAngle.y - squareSize, squareSize, squareSize);
+            }
+           
+            // Punten tekenen (P0, P1, P2 als sleepbare punten)
+            [P0, P1, P2].forEach(p => {
+                pythagorasCtx.beginPath();
+                let displayX = p.x;
+                let displayY = p.y;
+                if (p === P2) displayY = P2.y; // P2 sleept alleen verticaal, maar wordt getekend op P0.x
+
+                pythagorasCtx.arc(displayX, displayY, p.radius, 0, Math.PI * 2);
+                pythagorasCtx.fillStyle = p.color;
+                pythagorasCtx.fill();
+                pythagorasCtx.strokeStyle = "rgba(0,0,0,0.3)";
+                pythagorasCtx.lineWidth = 2;
+                pythagorasCtx.stroke();
+            });
+            
+            let b_len = Math.abs(P1.x - P0.x);
+            let a_len = Math.abs(P0.y - P2.y);
+            let c_len = Math.sqrt(a_len*a_len + b_len*b_len);
+
+            sideAVal.textContent = a_len.toFixed(1);
+            sideBVal.textContent = b_len.toFixed(1);
+            sideCVal.textContent = c_len.toFixed(1);
+            pythagorasCheck.innerHTML = `${a_len.toFixed(1)}<sup>2</sup> + ${b_len.toFixed(1)}<sup>2</sup> = ${c_len.toFixed(1)}<sup>2</sup> &nbsp; (${(a_len**2).toFixed(0)} + ${(b_len**2).toFixed(0)} = ${(c_len**2).toFixed(0)})`;
+        }
+        drawPythagorasTriangle();
+
+        pythagorasCanvas.addEventListener('mousedown', (e) => {
+            const rect = pythagorasCanvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            // Check P1 (horizontale zijde)
+            if (Math.sqrt((mouseX - P1.x)**2 + (mouseY - P1.y)**2) < P1.radius + 5) { // +5 voor groter klikgebied
+                draggingPythagorasPoint = P1;
+            } 
+            // Check P2 (verticale zijde)
+            else if (Math.sqrt((mouseX - P2.x)**2 + (mouseY - P2.y)**2) < P2.radius + 5) {
+                draggingPythagorasPoint = P2;
+            }
+        });
+
+        pythagorasCanvas.addEventListener('mousemove', (e) => {
+            if (!draggingPythagorasPoint) return;
+            const rect = pythagorasCanvas.getBoundingClientRect();
+            let mouseX = e.clientX - rect.left;
+            let mouseY = e.clientY - rect.top;
+            
+            const padding = 20; //Minimale afstand van de randen
+            if (draggingPythagorasPoint === P1) { // Verandert P1.x (lengte b)
+                P1.x = Math.max(P0.x + padding, Math.min(mouseX, pythagorasCanvas.width - padding));
+            } else if (draggingPythagorasPoint === P2) { // Verandert P2.y (lengte a)
+                P2.y = Math.min(P0.y - padding, Math.max(mouseY, padding));
+            }
+            drawPythagorasTriangle();
+        });
+        pythagorasCanvas.addEventListener('mouseup', () => draggingPythagorasPoint = null);
+        pythagorasCanvas.addEventListener('mouseleave', () => draggingPythagorasPoint = null);
+
+
+        // --- Deel 2: Oefenmodule ---
+        const exerciseProblemDiv = document.getElementById('exerciseProblem');
+        const studentAnswerInput = document.getElementById('studentAnswer');
+        const submitAnswerBtn = document.getElementById('submitAnswerBtn');
+        const feedbackAreaDiv = document.getElementById('feedbackArea');
+
+        const pythagoreanTriples = [
+            { a: 3, b: 4, c: 5 }, { a: 6, b: 8, c: 10 },
+            { a: 5, b: 12, c: 13 }, { a: 8, b: 15, c: 17 },
+            { a: 7, b: 24, c: 25 }, { a: 20, b: 21, c: 29 },
+            { a: 9, b: 40, c: 41 }, 
+            {a: 2, b: 3, c: Math.sqrt(13)}, // c approx 3.6
+            {a: 4, c: 7, b: Math.sqrt(33)}  // b approx 5.7
+        ];
+        let currentExercise = {};
+
+        function loadExercise() {
+            const triple = pythagoreanTriples[Math.floor(Math.random() * pythagoreanTriples.length)];
+            const findOptions = ['a', 'b', 'c'];
+            const find = findOptions[Math.floor(Math.random() * findOptions.length)];
+            
+            currentExercise = { ...triple, find };
+            studentAnswerInput.value = '';
+            feedbackAreaDiv.textContent = 'Vul je antwoord in en klik op "Controleer Antwoord".';
+            feedbackAreaDiv.className = ''; // Reset class
+
+            if (find === 'c') {
+                exerciseProblemDiv.innerHTML = `Een rechthoekige driehoek heeft rechthoekszijden <strong>a = ${triple.a.toFixed(1)}</strong> en <strong>b = ${triple.b.toFixed(1)}</strong>. Wat is de lengte van de schuine zijde c?`;
+                currentExercise.answer = triple.c;
+            } else if (find === 'b') {
+                exerciseProblemDiv.innerHTML = `Een rechthoekige driehoek heeft schuine zijde <strong>c = ${triple.c.toFixed(1)}</strong> en rechthoekszijde <strong>a = ${triple.a.toFixed(1)}</strong>. Wat is de lengte van de andere rechthoekszijde b?`;
+                currentExercise.answer = triple.b;
+            } else { // find 'a'
+                exerciseProblemDiv.innerHTML = `Een rechthoekige driehoek heeft schuine zijde <strong>c = ${triple.c.toFixed(1)}</strong> en rechthoekszijde <strong>b = ${triple.b.toFixed(1)}</strong>. Wat is de lengte van de andere rechthoekszijde a?`;
+                currentExercise.answer = triple.a;
+            }
+        }
+
+        submitAnswerBtn.addEventListener('click', () => {
+            const userAnswer = parseFloat(studentAnswerInput.value);
+            // Gebruik toFixed(1) voor het antwoord om vergelijking met input (vaak 1 decimaal) eerlijker te maken
+            const correctAnswer = parseFloat(currentExercise.answer.toFixed(1)); 
+
+            if (isNaN(userAnswer)) {
+                feedbackAreaDiv.textContent = "Voer een geldig getal in.";
+                feedbackAreaDiv.className = 'incorrect';
+                return;
+            }
+
+            if (Math.abs(userAnswer - correctAnswer) < 0.051) { // Tolerantie voor afronding (0.051 om 3.6 vs 3.6000000001 te vangen)
+                feedbackAreaDiv.textContent = `Correct! Het antwoord is ${correctAnswer.toFixed(1)}. Goed gedaan! Volgende vraag komt eraan...`;
+                feedbackAreaDiv.className = 'correct';
+                setTimeout(loadExercise, 2500); 
+            } else {
+                feedbackAreaDiv.textContent = `Helaas, dat is niet correct. Het juiste antwoord was ${correctAnswer.toFixed(1)}. Probeer de volgende!`;
+                feedbackAreaDiv.className = 'incorrect';
+                 setTimeout(loadExercise, 3000);
+            }
+        });
+        loadExercise();
+
+        // --- Deel 3: Gulden Rechthoek Constructie ---
+        const grCanvas = document.getElementById('goldenRectangleCanvas');
+        const grCtx = grCanvas.getContext('2d');
+        const grStep1Btn = document.getElementById('grStep1');
+        const grStep2Btn = document.getElementById('grStep2');
+        const grStep3Btn = document.getElementById('grStep3');
+        const grStep4Btn = document.getElementById('grStep4');
+        const grResetBtn = document.getElementById('grReset');
+        const grDiagonalCalcP = document.getElementById('grDiagonalCalc');
+        const goldenRatioValueP = document.getElementById('goldenRatioValue');
+        
+        let grState = { step: 0, squareSize: 120, offsetX: 30, offsetY: 50, halfRectWidth: 0, diagonal: 0, grWidth: 0 };
+
+        function drawGoldenRectangleStep() {
+            grCtx.clearRect(0, 0, grCanvas.width, grCanvas.height);
+            grCtx.strokeStyle = '#0056b3';
+            grCtx.lineWidth = 2;
+            grCtx.font = "14px Segoe UI";
+
+            // Stap 1: Teken Vierkant
+            if (grState.step >= 1) {
+                grCtx.strokeRect(grState.offsetX, grState.offsetY, grState.squareSize, grState.squareSize);
+                grCtx.fillText("x", grState.offsetX + grState.squareSize / 2 - 5, grState.offsetY - 8);
+                grCtx.fillText("x", grState.offsetX - 20, grState.offsetY + grState.squareSize / 2 + 5);
+            }
+            // Stap 2: Halveer Vierkant
+            if (grState.step >= 2) {
+                grState.halfRectWidth = grState.squareSize / 2;
+                const midX = grState.offsetX + grState.halfRectWidth;
+                grCtx.beginPath();
+                grCtx.moveTo(midX, grState.offsetY);
+                grCtx.lineTo(midX, grState.offsetY + grState.squareSize);
+                grCtx.strokeStyle = '#007bff'; // Blauw voor hulplijn
+                grCtx.stroke();
+                grCtx.fillText("x/2", grState.offsetX + grState.halfRectWidth / 2 - 10, grState.offsetY + grState.squareSize + 20);
+                 grCtx.fillText("M", midX - 5, grState.offsetY + grState.squareSize + 20); // Punt M
+            }
+            // Stap 3: Diagonaal (van hoekpunt vierkant naar midden onderkant)
+            if (grState.step >= 3) {
+                const midPointX = grState.offsetX + grState.halfRectWidth;
+                const midPointY = grState.offsetY + grState.squareSize;
+                const cornerX = grState.offsetX + grState.squareSize; // Rechterbovenhoek van het vierkant
+                const cornerY = grState.offsetY;
+
+                grCtx.beginPath();
+                grCtx.moveTo(midPointX, midPointY); 
+                grCtx.lineTo(cornerX, cornerY); 
+                grCtx.strokeStyle = '#dc3545'; // Rood voor diagonaal
+                grCtx.stroke();
+                // Pythagoras: diagonaal van de rechthoek (x hoog, x/2 breed)
+                grState.diagonal = Math.sqrt(grState.squareSize**2 + grState.halfRectWidth**2);
+                grDiagonalCalcP.innerHTML = `Lengte diagonaal (rode lijn) = √(x² + (x/2)²) = √(${grState.squareSize}² + ${grState.halfRectWidth}²) ≈ ${grState.diagonal.toFixed(1)}`;
+            }
+            // Stap 4: Construeer Gulden Rechthoek
+            if (grState.step >= 4) {
+                const midPointX = grState.offsetX + grState.halfRectWidth;
+                const midPointY = grState.offsetY + grState.squareSize;
+                
+                grCtx.beginPath();
+                // Boog van midden onderkant, met lengte diagonaal, naar rechts
+                // Correcte boog: centrum is M (midden van onderkant oorspr. vierkant). Radius is diagonaal.
+                // De boog gaat van het hoekpunt (waar diagonaal start) naar de verlengde basislijn.
+                const arcStartX = grState.offsetX + grState.squareSize; // Rechterbovenhoek van het vierkant
+                const arcStartY = grState.offsetY;
+                
+                // De diagonaal wordt "neergeklapt" vanaf het midden van de basis van het oorspronkelijke vierkant.
+                // Het centrum van de boog is (grState.offsetX + grState.halfRectWidth, grState.offsetY + grState.squareSize)
+                // De radius is grState.diagonal
+                // De boog start bij het punt (grState.offsetX + grState.squareSize, grState.offsetY) en eindigt op de lijn y = grState.offsetY + grState.squareSize
+                // De boog moet van het hoekpunt (cornerX, cornerY) naar beneden draaien.
+                // Centrum van rotatie: midPointX, midPointY (M)
+                // Startpunt van boog: cornerX, cornerY
+                // Eindpunt van boog: (midPointX + grState.diagonal * cos(angle), midPointY + grState.diagonal * sin(angle))
+                // Dit is de klassieke constructie: de lengte van de diagonaal wordt gebruikt om de breedte van de nieuwe rechthoek te bepalen.
+                // De nieuwe breedte = halfRectWidth + diagonal.
+                
+                grState.grWidth = grState.halfRectWidth + grState.diagonal;
+
+                // Teken de boog die de lengte overbrengt (visuele indicatie)
+                grCtx.beginPath();
+                // Centrum op M, start bij rechterbovenhoek vierkant, eindig op verlengde basislijn
+                const angleStart = Math.atan2(grState.offsetY - (grState.offsetY + grState.squareSize), (grState.offsetX + grState.squareSize) - (grState.offsetX + grState.halfRectWidth));
+                const angleEnd = Math.PI; // Naar links op de basislijn, we willen naar rechts
+
+                grCtx.arc(grState.offsetX + grState.halfRectWidth, // cx = M_x
+                          grState.offsetY + grState.squareSize,   // cy = M_y
+                          grState.diagonal,                       // radius
+                          angleStart,                             // startAngle
+                          0,                                      // endAngle (naar rechts) - Dit is nog steeds niet de standaard visuele manier
+                          false);                                 // clockwise
+                // De standaard manier is om een kompas te zetten op M, met potlood op de rechterbovenhoek van het vierkant,
+                // en dan een boog naar beneden te trekken tot de verlengde basislijn van het vierkant.
+                // Het punt waar de boog de verlengde basislijn snijdt, bepaalt de breedte van de gulden rechthoek.
+                // De x-coördinaat van dit snijpunt is: (offsetX + halfRectWidth) + diagonal.
+                // De y-coördinaat is: offsetY + squareSize.
+                // De boog zelf:
+                grCtx.beginPath();
+                grCtx.moveTo(grState.offsetX + grState.squareSize, grState.offsetY); // Startpunt van de diagonaal (rechterbovenhoek vierkant)
+                grCtx.arcTo(grState.offsetX + grState.halfRectWidth, grState.offsetY + grState.squareSize, // Controlepunt M
+                            grState.offsetX + grState.grWidth, grState.offsetY + grState.squareSize, // Eindpunt op verlengde basis
+                            grState.diagonal); // Radius
+                // Dit is nog steeds niet de juiste manier om de boog te tekenen.
+                // Eenvoudiger: teken een lijn van M naar het nieuwe hoekpunt, dat is visueel genoeg.
+
+                grCtx.strokeStyle = '#28a745'; // Groen voor constructielijn
+                grCtx.setLineDash([4, 4]);
+                grCtx.beginPath();
+                grCtx.moveTo(grState.offsetX + grState.halfRectWidth, grState.offsetY + grState.squareSize); // M
+                grCtx.lineTo(grState.offsetX + grState.grWidth, grState.offsetY + grState.squareSize); // Nieuw punt op basislijn
+                grCtx.lineTo(grState.offsetX + grState.grWidth, grState.offsetY); // Omhoog naar nieuwe rechterbovenhoek
+                grCtx.stroke();
+                grCtx.setLineDash([]);
+
+                grCtx.strokeStyle = '#333'; // Terug naar zwart voor de rechthoek
+                grCtx.strokeRect(grState.offsetX, grState.offsetY, grState.grWidth, grState.squareSize);
+                let phi = grState.grWidth / grState.squareSize;
+                goldenRatioValueP.innerHTML = `Gulden Rechthoek zijden: ${grState.squareSize.toFixed(0)} (hoogte) en ${grState.grWidth.toFixed(1)} (breedte). Verhouding $\phi \approx ${phi.toFixed(3)}`;
+            }
+            updateGRButtons();
+        }
+
+        function updateGRButtons() {
+            grStep1Btn.disabled = grState.step >= 1;
+            grStep2Btn.disabled = grState.step < 1 || grState.step >= 2;
+            grStep3Btn.disabled = grState.step < 2 || grState.step >= 3;
+            grStep4Btn.disabled = grState.step < 3 || grState.step >= 4;
+        }
+        
+        grResetBtn.addEventListener('click', () => {
+            grState.step = 0;
+            grDiagonalCalcP.textContent = ""; goldenRatioValueP.textContent = "";
+            drawGoldenRectangleStep();
+        });
+        grStep1Btn.addEventListener('click', () => { grState.step = 1; drawGoldenRectangleStep(); });
+        grStep2Btn.addEventListener('click', () => { grState.step = 2; drawGoldenRectangleStep(); });
+        grStep3Btn.addEventListener('click', () => { grState.step = 3; drawGoldenRectangleStep(); });
+        grStep4Btn.addEventListener('click', () => { grState.step = 4; drawGoldenRectangleStep(); });
+        drawGoldenRectangleStep();
+
+        // --- Deel 4: Gulden Spiraal ---
+        const gsCanvas = document.getElementById('goldenSpiralCanvas');
+        const gsCtx = gsCanvas.getContext('2d');
+        const gsStartBtn = document.getElementById('gsStart');
+        const gsNextStepBtn = document.getElementById('gsNextStep');
+        const gsResetBtn = document.getElementById('gsReset');
+        
+        let gsElements = []; // {square: {x,y,size}, arc: {cx,cy,r,sA,eA, acw}}
+        let currentGoldenRect = {}; // {x,y,w,h}
+        const PHI = 1.61803398875;
+
+        function drawGoldenSpiralElements() {
+            gsCtx.clearRect(0, 0, gsCanvas.width, gsCanvas.height);
+            gsCtx.lineWidth = 1.5;
+
+            gsElements.forEach(el => {
+                gsCtx.strokeStyle = '#0056b3'; // Blauw voor vierkanten
+                gsCtx.strokeRect(el.square.x, el.square.y, el.square.size, el.square.size);
+                
+                gsCtx.beginPath();
+                gsCtx.arc(el.arc.cx, el.arc.cy, el.arc.r, el.arc.sA, el.arc.eA, el.arc.acw);
+                gsCtx.strokeStyle = '#ff8c00'; // Oranje voor spiraal
+                gsCtx.lineWidth = 2;
+                gsCtx.stroke();
+            });
+        }
+        
+        gsResetBtn.addEventListener('click', () => {
+            gsElements = []; currentGoldenRect = {};
+            gsStartBtn.disabled = false; gsNextStepBtn.disabled = true;
+            drawGoldenSpiralElements();
+        });
+
+        gsStartBtn.addEventListener('click', () => {
+            gsElements = []; // Reset
+            let initialW = gsCanvas.width * 0.9;
+            let initialH = initialW / PHI;
+            if (initialH > gsCanvas.height * 0.9) {
+                initialH = gsCanvas.height * 0.9;
+                initialW = initialH * PHI;
+            }
+            currentGoldenRect = { 
+                x: (gsCanvas.width - initialW) / 2, 
+                y: (gsCanvas.height - initialH) / 2, 
+                w: initialW, 
+                h: initialH 
+            };
+            gsStartBtn.disabled = true; gsNextStepBtn.disabled = false;
+            gsCtx.strokeStyle = '#cccccc'; 
+            gsCtx.strokeRect(currentGoldenRect.x, currentGoldenRect.y, currentGoldenRect.w, currentGoldenRect.h);
+        });
+
+        gsNextStepBtn.addEventListener('click', () => {
+            if (Object.keys(currentGoldenRect).length === 0 || gsElements.length > 8 || currentGoldenRect.w < 2 || currentGoldenRect.h < 2) {
+                gsNextStepBtn.disabled = true;
+                return;
+            }
+
+            let { x, y, w, h } = currentGoldenRect;
+            let sqX, sqY, sqSize;
+            let arcCX, arcCY, arcR, arcSA, arcEA, arcACW = false; 
+            let nextGRX, nextGRY, nextGRW, nextGRH;
+
+            const orientation = gsElements.length % 4; 
+
+            if (orientation === 0) { // Vierkant links in de breedste rechthoek (w > h)
+                sqSize = h; sqX = x; sqY = y;
+                arcCX = x + sqSize; arcCY = y; arcR = sqSize; arcSA = Math.PI; arcEA = 1.5 * Math.PI;
+                nextGRX = x + sqSize; nextGRY = y; nextGRW = w - sqSize; nextGRH = h;
+            } else if (orientation === 1) { // Vierkant boven in de hoogste rechthoek (h > w)
+                sqSize = w; sqX = x; sqY = y;
+                arcCX = x + sqSize; arcCY = y + sqSize; arcR = sqSize; arcSA = 1.5 * Math.PI; arcEA = 2*Math.PI; // 0
+                nextGRX = x; nextGRY = y + sqSize; nextGRW = w; nextGRH = h - sqSize;
+            } else if (orientation === 2) { // Vierkant rechts
+                sqSize = h; sqX = x + w - sqSize; sqY = y;
+                arcCX = x + w - sqSize; arcCY = y + sqSize; arcR = sqSize; arcSA = 0; arcEA = 0.5 * Math.PI;
+                nextGRX = x; nextGRY = y; nextGRW = w - sqSize; nextGRH = h;
+            } else { // orientation === 3 (Vierkant onder)
+                sqSize = w; sqX = x; sqY = y + h - sqSize;
+                arcCX = x; arcCY = y + h - sqSize; arcR = sqSize; arcSA = 0.5 * Math.PI; arcEA = Math.PI;
+                nextGRX = x; nextGRY = y; nextGRW = w; nextGRH = h - sqSize;
+            }
+            
+            gsElements.push({square: {x:sqX, y:sqY, size:sqSize}, arc: {cx:arcCX, cy:arcCY, r:arcR, sA:arcSA, eA:arcEA, acw: arcACW}});
+            currentGoldenRect = {x:nextGRX, y:nextGRY, w:nextGRW, h:nextGRH};
+            drawGoldenSpiralElements();
+        });
+        drawGoldenSpiralElements();
+
+
+        // --- Deel 5: Gulden Snede Verkenner (Mona Lisa) ---
+        const artworkImage = document.getElementById('artworkImage');
+        const overlayCanvas = document.getElementById('goldenOverlayCanvas');
+        const overlayCtx = overlayCanvas.getContext('2d');
+        const toggleOverlayBtn = document.getElementById('toggleOverlay');
+        const overlayWidthSlider = document.getElementById('overlayWidthSlider');
+        
+        let overlayVisible = false;
+        let overlayRect = { x: 50, y: 50, w: 200, h: 200 / PHI, isDragging: false, dragStartX:0, dragStartY:0 };
+
+        function resizeAndPositionOverlayCanvas() {
+            overlayCanvas.width = artworkImage.clientWidth; 
+            overlayCanvas.height = artworkImage.clientHeight;
+            
+            overlayRect.w = parseInt(overlayWidthSlider.value); // Behoud de breedte van de slider
+            overlayRect.h = overlayRect.w / PHI;
+
+            overlayRect.x = Math.min(overlayRect.x, overlayCanvas.width - overlayRect.w);
+            overlayRect.y = Math.min(overlayRect.y, overlayCanvas.height - overlayRect.h);
+            overlayRect.x = Math.max(0, overlayRect.x);
+            overlayRect.y = Math.max(0, overlayRect.y);
+            drawGoldenOverlay();
+        }
+        
+        function drawInternalSpiralOnOverlay(ctx, rect) {
+          let r = {...rect}; 
+          ctx.lineWidth = 1.5;
+          ctx.strokeStyle = 'rgba(255, 215, 0, 0.7)'; 
+
+          for(let i = 0; i < 6; i++) { 
+            if (r.w < 3 || r.h < 3) break; 
+
+            let sqSize, arcCX, arcCY, arcR, arcSA, arcEA, arcACW = false;
+            const orientation = i % 4;
+
+            if (orientation === 0) { 
+                sqSize = r.h; arcCX = r.x + sqSize; arcCY = r.y; arcR = sqSize; arcSA = Math.PI; arcEA = 1.5 * Math.PI;
+                ctx.strokeRect(r.x, r.y, sqSize, sqSize);
+                ctx.beginPath(); ctx.arc(arcCX, arcCY, arcR, arcSA, arcEA, arcACW); ctx.stroke();
+                r = { x: r.x + sqSize, y: r.y, w: r.w - sqSize, h: r.h };
+            } else if (orientation === 1) { 
+                sqSize = r.w; arcCX = r.x + sqSize; arcCY = r.y + sqSize; arcR = sqSize; arcSA = 1.5 * Math.PI; arcEA = 2 * Math.PI;
+                ctx.strokeRect(r.x, r.y, sqSize, sqSize);
+                ctx.beginPath(); ctx.arc(arcCX, arcCY, arcR, arcSA, arcEA, arcACW); ctx.stroke();
+                r = { x: r.x, y: r.y + sqSize, w: r.w, h: r.h - sqSize };
+            } else if (orientation === 2) { 
+                sqSize = r.h; arcCX = r.x + r.w - sqSize; arcCY = r.y + sqSize; arcR = sqSize; arcSA = 0; arcEA = 0.5 * Math.PI;
+                ctx.strokeRect(r.x + r.w - sqSize, r.y, sqSize, sqSize);
+                ctx.beginPath(); ctx.arc(arcCX, arcCY, arcR, arcSA, arcEA, arcACW); ctx.stroke();
+                r = { x: r.x, y: r.y, w: r.w - sqSize, h: r.h };
+            } else { 
+                sqSize = r.w; arcCX = r.x; arcCY = r.y + r.h - sqSize; arcR = sqSize; arcSA = 0.5 * Math.PI; arcEA = Math.PI;
+                ctx.strokeRect(r.x, r.y + r.h - sqSize, sqSize, sqSize);
+                ctx.beginPath(); ctx.arc(arcCX, arcCY, arcR, arcSA, arcEA, arcACW); ctx.stroke();
+                r = { x: r.x, y: r.y, w: r.w, h: r.h - sqSize };
+            }
+          }
+        }
+
+        function drawGoldenOverlay() {
+            overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+            if (!overlayVisible) return;
+
+            overlayCtx.strokeStyle = 'rgba(255, 215, 0, 0.85)'; 
+            overlayCtx.lineWidth = 3;
+            overlayCtx.strokeRect(overlayRect.x, overlayRect.y, overlayRect.w, overlayRect.h);
+            
+            drawInternalSpiralOnOverlay(overlayCtx, overlayRect);
+        }
+
+        toggleOverlayBtn.addEventListener('click', () => {
+            overlayVisible = !overlayVisible;
+            drawGoldenOverlay();
+        });
+
+        overlayWidthSlider.addEventListener('input', () => {
+            overlayRect.w = parseInt(overlayWidthSlider.value);
+            overlayRect.h = overlayRect.w / PHI;
+            overlayRect.x = Math.min(overlayRect.x, overlayCanvas.width - overlayRect.w);
+            overlayRect.y = Math.min(overlayRect.y, overlayCanvas.height - overlayRect.h);
+            overlayRect.x = Math.max(0, overlayRect.x); 
+            overlayRect.y = Math.max(0, overlayRect.y); 
+            drawGoldenOverlay();
+        });
+
+        overlayCanvas.addEventListener('mousedown', (e) => {
+            if (!overlayVisible) return;
+            const mouseX = e.offsetX; 
+            const mouseY = e.offsetY;
+            if (mouseX >= overlayRect.x && mouseX <= overlayRect.x + overlayRect.w &&
+                mouseY >= overlayRect.y && mouseY <= overlayRect.y + overlayRect.h) {
+                overlayRect.isDragging = true;
+                overlayRect.dragStartX = mouseX - overlayRect.x;
+                overlayRect.dragStartY = mouseY - overlayRect.y;
+                overlayCanvas.style.cursor = 'grabbing';
+            }
+        });
+
+        overlayCanvas.addEventListener('mousemove', (e) => {
+            if (!overlayRect.isDragging || !overlayVisible) return;
+            overlayRect.x = e.offsetX - overlayRect.dragStartX;
+            overlayRect.y = e.offsetY - overlayRect.dragStartY;
+
+            overlayRect.x = Math.max(0, Math.min(overlayRect.x, overlayCanvas.width - overlayRect.w));
+            overlayRect.y = Math.max(0, Math.min(overlayRect.y, overlayCanvas.height - overlayRect.h));
+            drawGoldenOverlay();
+        });
+
+        overlayCanvas.addEventListener('mouseup', () => {
+            overlayRect.isDragging = false;
+            overlayCanvas.style.cursor = 'grab';
+        });
+         overlayCanvas.addEventListener('mouseleave', () => {
+            if(overlayRect.isDragging) { 
+                 overlayRect.isDragging = false;
+                 overlayCanvas.style.cursor = 'grab';
+            }
+        });
+        
+        artworkImage.onload = () => {
+            overlayWidthSlider.max = artworkImage.clientWidth * 0.95; 
+            resizeAndPositionOverlayCanvas();
+        };
+        if (artworkImage.complete) { 
+             overlayWidthSlider.max = artworkImage.clientWidth * 0.95;
+            resizeAndPositionOverlayCanvas();
+        }
+        
+        const resizeObserver = new ResizeObserver(entries => {
+            for (let entry of entries) {
+                if (entry.target === artworkImage) {
+                    overlayWidthSlider.max = artworkImage.clientWidth * 0.95;
+                    resizeAndPositionOverlayCanvas();
+                }
+            }
+        });
+        if(artworkImage) { // Zorg ervoor dat artworkImage bestaat voordat je observeert
+            resizeObserver.observe(artworkImage);
+        }
+        window.addEventListener('resize', resizeAndPositionOverlayCanvas);
+        
+    </script>
+</body>
+</html>

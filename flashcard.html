@@ -1,0 +1,1535 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pythagoras Quiz Flashcards</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        /* Inter font import (optional, Tailwind uses a good default sans-serif stack) */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Tailwind gray-100 */
+        }
+
+        .flashcard-container {
+            perspective: 1000px;
+            min-height: 300px; /* Adjusted for potentially more content */
+            margin-bottom: 1.5rem; /* Tailwind mb-6 */
+        }
+
+        .flashcard {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.7s cubic-bezier(0.4, 0.2, 0.2, 1);
+            border-radius: 0.75rem; /* Tailwind rounded-xl */
+        }
+
+        .flashcard.is-flipped {
+            transform: rotateY(180deg);
+        }
+
+        .flashcard-front,
+        .flashcard-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden; /* Safari */
+            border-radius: 0.75rem; /* Tailwind rounded-xl */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Tailwind shadow-lg */
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem; /* Tailwind p-6 */
+            overflow-y: auto; /* Scroll if content overflows */
+        }
+
+        .flashcard-front {
+            background-color: white; /* Default front background */
+        }
+
+        .flashcard-back {
+            transform: rotateY(180deg);
+            /* Background color (correct/incorrect) will be set by JavaScript */
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Center content vertically */
+            align-items: center; /* Center content horizontally */
+            text-align: center;
+        }
+
+        .options-container label {
+            transition: background-color 0.2s ease-in-out;
+        }
+        .options-container label:hover {
+            background-color: #f9fafb; /* Tailwind gray-50 */
+        }
+        .options-container input[type="radio"]:checked + span {
+            font-weight: 600; /* Tailwind semibold */
+        }
+
+        /* School colors as CSS variables for easier use if needed, or direct Tailwind */
+        :root {
+            --brand-orange: #f04b20;
+            --brand-teal: #009cab;
+            --brand-yellow: #f0cf1f;
+            --brand-grey: #546363;
+        }
+
+        /* Custom scrollbar for better aesthetics */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #e5e7eb; border-radius: 10px; } /* Tailwind gray-200 */
+        ::-webkit-scrollbar-thumb { background: var(--brand-grey); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--brand-teal); }
+
+    </style>
+</head>
+<body class="text-brand-grey">
+<header class="bg-brand-teal text-white p-5 shadow-lg sticky top-0 z-50">
+    <div class="container mx-auto flex flex-col sm:flex-row justify-between items-center">
+        <h1 class="text-2xl md:text-3xl font-bold mb-2 sm:mb-0">Pythagoras Quiz</h1>
+        <div class="text-lg md:text-xl">Score: <span id="score" class="font-bold">0</span></div>
+    </div>
+</header>
+
+<main id="quiz-container" class="container mx-auto p-4 md:p-6 lg:p-8">
+    <div id="loading-message" class="text-center text-xl text-brand-grey py-10">Quiz aan het laden...</div>
+</main>
+
+<footer class="text-center p-4 text-sm text-brand-grey mt-8">
+    Gebruik de basiskleuren van onze school:
+    <span style="color:#f04b20;">■ Oranje</span>,
+    <span style="color:#009cab;">■ Cyaan</span>,
+    <span style="color:#f0cf1f;">■ Geel</span>,
+    <span style="color:#546363;">■ Grijs</span>.
+</footer>
+
+<script>
+    // Tailwind config
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    'brand-orange': '#f04b20',
+                    'brand-teal': '#009cab',
+                    'brand-yellow': '#f0cf1f',
+                    'brand-grey': '#546363',
+                    'brand-bg-correct': '#dcfce7',    // Tailwind green-100
+                    'brand-text-correct': '#15803d',  // Tailwind green-700
+                    'brand-bg-incorrect': '#fee2e2',  // Tailwind red-100
+                    'brand-text-incorrect': '#b91c1c',// Tailwind red-700
+                }
+            }
+        }
+    }
+
+    // The full markdown string will go here
+    const markdownData = `
+# Pythagoras in het dagelijks leven: ontdek de kracht van wiskunde
+
+
+## Quiz
+
+### Hoofdstuk 1: De Stelling van Pythagoras - Een Herhaling
+
+#### Wat is de stelling van Pythagoras? *
+
+_**Vraag**_:
+
+Welke formule drukt de stelling van Pythagoras correct uit?
+
+- **A**: a + b = c
+- **B**: a² + b² = c²
+- **C**: a² - b² = c²
+- **D**: a = b + c
+- **E**: a/b = c
+
+
+_**Correct antwoord**_:
+
+_**B**_: a² + b² = c²
+
+_**Uitleg**_:
+
+De stelling van Pythagoras stelt dat in een rechthoekige driehoek de som van de kwadraten van de rechthoekszijden (a en b) gelijk is aan het kwadraat van de schuine zijde (c).
+
+#### Identificatie van de schuine zijde *
+
+_**Vraag**_:
+
+In een rechthoekige driehoek, welke zijde wordt de schuine zijde genoemd?
+
+- **A**: De kortste zijde
+- **B**: De zijde tegenover de kleinste hoek
+- **C**: De zijde tegenover de rechte hoek
+- **D**: De zijde die de rechte hoek vormt
+- **E**: De zijde aangeduid met 'a'
+
+
+_**Correct antwoord**_:
+
+_**C**_: De zijde tegenover de rechte hoek
+
+_**Uitleg**_:
+
+De schuine zijde is altijd de langste zijde in een rechthoekige driehoek en bevindt zich tegenover de hoek van 90 graden.
+
+#### Toepasbaarheid van de stelling *
+
+_**Vraag**_:
+
+Voor welke type driehoeken is de stelling van Pythagoras geldig?
+
+- **A**: Alle driehoeken
+- **B**: Alleen gelijkzijdige driehoeken
+- **C**: Alleen gelijkbenige driehoeken
+- **D**: Alleen rechthoekige driehoeken
+- **E**: Alle stomphoekige driehoeken
+
+
+_**Correct antwoord**_:
+
+_**D**_: Alleen rechthoekige driehoeken
+
+_**Uitleg**_:
+
+De stelling van Pythagoras is uitsluitend van toepassing op rechthoekige driehoeken, dit zijn driehoeken met één hoek van 90 graden.
+
+#### Bereken de schuine zijde **
+
+_**Vraag**_:
+
+Een rechthoekige driehoek heeft rechthoekszijden van 6 cm en 8 cm. Wat is de lengte van de schuine zijde?
+
+- **A**: 10 cm
+- **B**: 12 cm
+- **C**: 14 cm
+- **D**: 48 cm
+- **E**: 5 cm
+
+
+_**Correct antwoord**_:
+
+_**A**_: 10 cm
+
+_**Uitleg**_:
+
+Met a = 6 en b = 8, dan is c² = a² + b² = 6² + 8² = 36 + 64 = 100. Dus c = √100 = 10 cm.
+
+#### Bereken een rechthoekszijde **
+
+_**Vraag**_:
+
+De schuine zijde van een rechthoekige driehoek is 13 cm en een van de rechthoekszijden is 5 cm. Wat is de lengte van de andere rechthoekszijde?
+
+- **A**: 8 cm
+- **B**: 9 cm
+- **C**: 12 cm
+- **D**: 14 cm
+- **E**: 18 cm
+
+
+_**Correct antwoord**_:
+
+_**C**_: 12 cm
+
+_**Uitleg**_:
+
+Met c = 13 en a = 5, dan is b² = c² - a² = 13² - 5² = 169 - 25 = 144. Dus b = √144 = 12 cm.
+
+#### Visueel bewijs van Pythagoras **
+
+_**Vraag**_:
+
+In het visuele bewijs van de stelling van Pythagoras, wat stellen de vier identieke rechthoekige driehoeken voor binnen het grotere vierkant?
+
+- **A**: Ze vormen een groter vierkant
+- **B**: Ze zijn irrelevant voor het bewijs
+- **C**: Ze vormen samen met een kleiner vierkant de oppervlakte van het grotere vierkant
+- **D**: Ze vertegenwoordigen de schuine zijde
+- **E**: Ze vertegenwoordigen de rechthoekszijden
+
+
+_**Correct antwoord**_:
+
+_**C**_: Ze vormen samen met een kleiner vierkant de oppervlakte van het grotere vierkant
+
+_**Uitleg**_:
+
+De vier driehoeken en het kleinere vierkant (gevormd door de schuine zijden) vullen samen het grotere vierkant, wat de basis vormt van het visuele bewijs.
+
+#### Praktische toepassing: ladder tegen een muur **
+
+_**Vraag**_:
+
+Een ladder van 5 meter staat tegen een muur. De voet van de ladder staat 3 meter van de muur. Hoe hoog reikt de ladder tegen de muur?
+
+- **A**: 2 meter
+- **B**: 3 meter
+- **C**: 4 meter
+- **D**: 6 meter
+- **E**: 8 meter
+
+
+_**Correct antwoord**_:
+
+_**C**_: 4 meter
+
+_**Uitleg**_:
+
+De ladder vormt de schuine zijde (c = 5), de afstand van de muur is een rechthoekszijde (b = 3). Dus a² = c² - b² = 5² - 3² = 25 - 9 = 16. Dus a = √16 = 4 meter.
+
+#### Algebraïsch bewijs: gelijkvormigheid ***
+
+_**Vraag**_:
+
+Welk principe van gelijkvormigheid wordt gebruikt in het algebraïsche bewijs van Pythagoras met gelijkvormige driehoeken?
+
+- **A**: Gelijkvormige driehoeken hebben dezelfde oppervlakte
+- **B**: Overeenkomstige hoeken in gelijkvormige driehoeken zijn gelijk
+- **C**: De verhouding van overeenkomstige zijden in gelijkvormige driehoeken is constant
+- **D**: Gelijkvormige driehoeken zijn altijd congruent
+- **E**: De som van de hoeken in gelijkvormige driehoeken is verschillend
+
+
+_**Correct antwoord**_:
+
+_**C**_: De verhouding van overeenkomstige zijden in gelijkvormige driehoeken is constant
+
+_**Uitleg**_:
+
+Het algebraïsche bewijs maakt gebruik van de constante verhouding van overeenkomstige zijden in de gelijkvormige driehoeken ABC, ACD en CBD om de stelling te bewijzen.
+
+#### Dubbele toepassing van Pythagoras ***
+
+_**Vraag**_:
+
+Een rechthoek heeft een lengte van 12 cm en een breedte van 5 cm. Wat is de lengte van de diagonaal van de rechthoek?
+
+- **A**: 7 cm
+- **B**: 13 cm
+- **C**: 17 cm
+- **D**: 60 cm
+- **E**: 119 cm
+
+
+_**Correct antwoord**_:
+
+_**B**_: 13 cm
+
+_**Uitleg**_:
+
+De diagonaal van de rechthoek vormt de schuine zijde van een rechthoekige driehoek met de lengte en breedte als rechthoekszijden. Dus d² = 12² + 5² = 144 + 25 = 169. Dus d = √169 = 13 cm.
+
+#### Pythagoras in 3D ***
+
+_**Vraag**_:
+
+Een balk heeft zijden van 3cm, 4cm en 12cm. Wat is de lengte van de lichaamsdiagonaal?
+
+- **A**: 19 cm
+- **B**: 17 cm
+- **C**: 15 cm
+- **D**: 13 cm
+- **E**: 5 cm
+
+
+_**Correct antwoord**_:
+
+_**D**_: 13 cm
+
+_**Uitleg**_:
+
+De lichaamsdiagonaal d kan worden berekend met d² = a² + b² + c² = 3² + 4² + 12² = 9 + 16 + 144 = 169. Dus d = √169 = 13 cm.
+
+
+
+---
+
+### Hoofdstuk 2: Pythagoras in de Architectuur en Bouwkunde
+
+#### Rechthoekige Opslagplaats *
+
+_**Vraag**_:
+
+Een rechthoekige opslagplaats is 8 meter lang en 6 meter breed. Wat is de lengte van de diagonaal?
+
+- **A**: 10 meter
+- **B**: 12 meter
+- **C**: 14 meter
+- **D**: 9 meter
+- **E**: 11 meter
+
+
+_**Correct antwoord**_:
+
+_**A**_: 10 meter
+
+_**Uitleg**_:
+
+Met de stelling van Pythagoras: a² + b² = c². Dus 8² + 6² = c², wat 64 + 36 = 100 is. De wortel van 100 is 10, dus de diagonaal is 10 meter.
+
+#### Dakhelling Berekenen **
+
+_**Vraag**_:
+
+Een dak heeft een overspanning van 10 meter en een hoogte van 4 meter. Wat is de hellingshoek (gebruik de arctan functie)?
+
+- **A**: Ongeveer 21.8 graden
+- **B**: Ongeveer 23.2 graden
+- **C**: Ongeveer 20.1 graden
+- **D**: Ongeveer 25.5 graden
+- **E**: Ongeveer 18.4 graden
+
+
+_**Correct antwoord**_:
+
+_**A**_: Ongeveer 21.8 graden
+
+_**Uitleg**_:
+
+De tangens van de hoek is hoogte/overspanning = 4/10 = 0.4. De inverse tangens (arctan) van 0.4 is ongeveer 21.8 graden.
+
+#### Fundering Uitzetten ***
+
+_**Vraag**_:
+
+Je gebruikt de 3-4-5 methode om een rechte hoek uit te zetten voor een fundering. Je hebt al 3 meter en 4 meter gemarkeerd. Welke afstand moet de diagonaal zijn om een perfect rechte hoek te garanderen?
+
+- **A**: 5 meter
+- **B**: 6 meter
+- **C**: 7 meter
+- **D**: 4.5 meter
+- **E**: 5.5 meter
+- **F**: 3.5 meter
+
+
+_**Correct antwoord**_:
+
+_**A**_: 5 meter
+
+_**Uitleg**_:
+
+De 3-4-5 methode is gebaseerd op de stelling van Pythagoras (3² + 4² = 5²). Een diagonaal van 5 meter garandeert een rechte hoek.
+
+#### Trap Ontwerpen **
+
+_**Vraag**_:
+
+Je ontwerpt een trap. De totale hoogte is 288 cm en je kiest een optrede van 18 cm. Volgens de vuistregel (optrede + 2 * aantrede = 63 cm), wat is de ideale aantrede?
+
+- **A**: 22.5 cm
+- **B**: 20 cm
+- **C**: 25 cm
+- **D**: 21 cm
+- **E**: 24 cm
+
+
+_**Correct antwoord**_:
+
+_**A**_: 22.5 cm
+
+_**Uitleg**_:
+
+18 + 2 * aantrede = 63. Dus 2 * aantrede = 45, en aantrede = 22.5 cm.
+
+#### Steunbalk Lengte Berekenen **
+
+_**Vraag**_:
+
+Een steunbalk loopt diagonaal van een muur naar een dakrand. De horizontale afstand is 3 meter en de verticale afstand is 2 meter. Hoe lang moet de steunbalk zijn?
+
+- **A**: Ongeveer 3.61 meter
+- **B**: Ongeveer 4 meter
+- **C**: Ongeveer 3.5 meter
+- **D**: Ongeveer 3.8 meter
+- **E**: Ongeveer 3.2 meter
+
+
+_**Correct antwoord**_:
+
+_**A**_: Ongeveer 3.61 meter
+
+_**Uitleg**_:
+
+Met Pythagoras: steunbalk² = 3² + 2² = 9 + 4 = 13. De wortel van 13 is ongeveer 3.61 meter.
+
+#### Diagonaal van een Vierkant **
+
+_**Vraag**_:
+
+Een vierkant plein heeft een zijde van 20 meter. Wat is de lengte van de diagonaal van het plein?
+
+- **A**: Ongeveer 28.28 meter
+- **B**: 30 meter
+- **C**: 25 meter
+- **D**: 32 meter
+- **E**: 26 meter
+
+
+_**Correct antwoord**_:
+
+_**A**_: Ongeveer 28.28 meter
+
+_**Uitleg**_:
+
+De diagonaal van een vierkant is zijde * √2. Dus 20 * √2 ≈ 28.28 meter.
+
+#### Rechte Hoek Controleren *
+
+_**Vraag**_:
+
+Welke set van zijden voldoet aan de stelling van Pythagoras en kan gebruikt worden om een rechte hoek te controleren?
+
+- **A**: 3, 4, 5
+- **B**: 1, 2, 3
+- **C**: 5, 10, 12
+- **D**: 6, 8, 9
+- **E**: 2, 3, 4
+
+
+_**Correct antwoord**_:
+
+_**A**_: 3, 4, 5
+
+_**Uitleg**_:
+
+Alleen 3² + 4² = 5² (9 + 16 = 25) voldoet aan de stelling van Pythagoras.
+
+#### Dakhelling en Waterafvoer **
+
+_**Vraag**_:
+
+Waarom is de juiste hellingshoek van een dak belangrijk?
+
+- **A**: Voor optimale waterafvoer en lange levensduur van het dak
+- **B**: Alleen voor de esthetiek van het gebouw
+- **C**: Om de kosten van de dakbedekking te minimaliseren
+- **D**: Alleen om de windbelasting te verminderen
+- **E**: Om de isolatiewaarde te verhogen
+
+
+_**Correct antwoord**_:
+
+_**A**_: Voor optimale waterafvoer en lange levensduur van het dak
+
+_**Uitleg**_:
+
+Een correcte hellingshoek zorgt ervoor dat water goed afgevoerd wordt en voorkomt lekkages, wat de levensduur van het dak verlengt.
+
+#### Fundering en Stabiliteit ***
+
+_**Vraag**_:
+
+Wat zijn de mogelijke gevolgen van een fundering die niet recht is uitgezet?
+
+- **A**: Scheve muren, slecht sluitende deuren en ramen, en een verzwakte structuur
+- **B**: Alleen esthetische problemen
+- **C**: Hogere energiekosten
+- **D**: Snellere slijtage van de dakbedekking
+- **E**: Meer geluidsoverlast
+
+
+_**Correct antwoord**_:
+
+_**A**_: Scheve muren, slecht sluitende deuren en ramen, en een verzwakte structuur
+
+_**Uitleg**_:
+
+Een onjuist uitgezette fundering kan leiden tot structurele problemen in het hele gebouw.
+
+#### Trapboom Berekenen ***
+
+_**Vraag**_:
+
+Je wilt een trap maken met 12 treden. Elke trede heeft een optrede van 17 cm en een aantrede van 23 cm. Wat is de totale lengte van de trapboom?
+
+- **A**: Ongeveer 342 cm
+- **B**: Ongeveer 300 cm
+- **C**: Ongeveer 400 cm
+- **D**: Ongeveer 360 cm
+- **E**: Ongeveer 420 cm
+
+
+_**Correct antwoord**_:
+
+_**A**_: Ongeveer 342 cm
+
+_**Uitleg**_:
+
+Voor één trede: trapboom² = 17² + 23² = 289 + 529 = 818. Trapboom (één trede) = √818 ≈ 28.6 cm. Totale trapboom = 12 * 28.6 cm ≈ 343.2 cm. Afgerond is dat 342 cm.
+
+
+
+---
+
+### Hoofdstuk 3: Navigatie en Landmeetkunde - Pythagoras als Kompas
+
+#### Pythagoras op de Kaart *
+
+_**Vraag**_:
+
+Stad X ligt 6 cm ten oosten en 8 cm ten noorden van Stad Y op een kaart. Wat is de directe afstand tussen Stad X en Stad Y op de kaart?
+
+- **A**: 10 cm
+- **B**: 12 cm
+- **C**: 14 cm
+- **D**: 48 cm
+- **E**: 5 cm
+
+
+_**Correct antwoord**_:
+
+_**A**_: 10 cm
+
+_**Uitleg**_:
+
+Gebruik de stelling van Pythagoras: a² + b² = c².  Hier is a = 6 cm en b = 8 cm. Dus, 6² + 8² = 36 + 64 = 100.  De wortel van 100 is 10, dus c = 10 cm.
+
+#### Schaal en Afstand **
+
+_**Vraag**_:
+
+Twee punten liggen 7 cm uit elkaar op een kaart met een schaal van 1:50.000. Wat is de werkelijke afstand tussen de punten in kilometers?
+
+- **A**: 2.5 km
+- **B**: 3.0 km
+- **C**: 3.5 km
+- **D**: 4.0 km
+- **E**: 4.5 km
+
+
+_**Correct antwoord**_:
+
+_**C**_: 3.5 km
+
+_**Uitleg**_:
+
+7 cm op de kaart komt overeen met 7 * 50.000 cm in werkelijkheid.  Dat is 350.000 cm, of 3500 meter, of 3.5 km.
+
+#### GPS en Satellieten **
+
+_**Vraag**_:
+
+Een GPS-apparaat gebruikt signalen van satellieten om je positie te bepalen. Welke wiskundige stelling is essentieel voor het berekenen van de afstand tot deze satellieten?
+
+- **A**: De stelling van Thales
+- **B**: De stelling van Pythagoras
+- **C**: De sinusregel
+- **D**: De cosinusregel
+- **E**: De stelling van Fermat
+
+
+_**Correct antwoord**_:
+
+_**B**_: De stelling van Pythagoras
+
+_**Uitleg**_:
+
+GPS gebruikt de stelling van Pythagoras (in 3D) om afstanden te berekenen op basis van de signalen van satellieten. De afstanden tot de satellieten bepalen jouw positie.
+
+#### Hoogte van een Berg ***
+
+_**Vraag**_:
+
+Je staat 200 meter van de voet van een berg. De hoek van elevatie naar de top is 45 graden. Wat is de hoogte van de berg?
+
+- **A**: 100 meter
+- **B**: 141.4 meter
+- **C**: 200 meter
+- **D**: 282.8 meter
+- **E**: 400 meter
+
+
+_**Correct antwoord**_:
+
+_**C**_: 200 meter
+
+_**Uitleg**_:
+
+Omdat de hoek van elevatie 45 graden is, is de tangens van de hoek 1.  De hoogte is dan de horizontale afstand vermenigvuldigd met de tangens van de hoek: 200 * 1 = 200 meter.
+
+#### Navigatie met een Schip **
+
+_**Vraag**_:
+
+Een schip vaart 80 km naar het zuiden en vervolgens 60 km naar het westen. Hoe ver is het schip in vogelvlucht van zijn vertrekpunt?
+
+- **A**: 20 km
+- **B**: 70 km
+- **C**: 100 km
+- **D**: 140 km
+- **E**: 4800 km
+
+
+_**Correct antwoord**_:
+
+_**C**_: 100 km
+
+_**Uitleg**_:
+
+Gebruik de stelling van Pythagoras: 80² + 60² = c².  Dus, 6400 + 3600 = 10000.  De wortel van 10000 is 100, dus c = 100 km.
+
+#### Rechte Lijn over Oneffen Terrein ***
+
+_**Vraag**_:
+
+Waarom is het noodzakelijk om de stelling van Pythagoras te gebruiken bij het uitzetten van een rechte lijn over oneffen terrein?
+
+- **A**: Om de magnetische declinatie te corrigeren.
+- **B**: Om de kromming van de aarde te compenseren.
+- **C**: Om de afwijking door wind te minimaliseren.
+- **D**: Om de werkelijke afstand over de oneffenheden te berekenen.
+- **E**: Om de invloed van de zwaartekracht te negeren.
+
+
+_**Correct antwoord**_:
+
+_**D**_: Om de werkelijke afstand over de oneffenheden te berekenen.
+
+_**Uitleg**_:
+
+De stelling van Pythagoras helpt om de schuine afstand (hypotenusa) te berekenen, rekening houdend met de horizontale en verticale afstanden (oneffenheden) van het terrein. Dit zorgt voor een nauwkeurigere benadering van een rechte lijn.
+
+#### Theodoliet en Pythagoras **
+
+_**Vraag**_:
+
+Een landmeter gebruikt een theodoliet om de hoek van elevatie naar de top van een boom te meten. Welke andere meting is essentieel om de hoogte van de boom te bepalen met behulp van trigonometrie en Pythagoras?
+
+- **A**: De kleur van de boom
+- **B**: De afstand tot de voet van de boom
+- **C**: De windsnelheid
+- **D**: De luchtdruk
+- **E**: De temperatuur
+
+
+_**Correct antwoord**_:
+
+_**B**_: De afstand tot de voet van de boom
+
+_**Uitleg**_:
+
+Om de hoogte te berekenen, heb je de hoek van elevatie en de horizontale afstand tot de voet van de boom nodig. Met deze gegevens kun je de hoogte berekenen met behulp van de tangensfunctie en eventueel de stelling van Pythagoras om de schuine zijde te vinden.
+
+#### GPS Nauwkeurigheid ***
+
+_**Vraag**_:
+
+Waarom gebruikt een GPS-systeem minimaal vier satellieten om een nauwkeurige positie te bepalen?
+
+- **A**: Om de batterijduur van het GPS-apparaat te verlengen.
+- **B**: Om de invloed van de maan te compenseren.
+- **C**: Om de tijdcorrectie van de ontvanger te bepalen.
+- **D**: Om de signalen van andere GPS-apparaten te negeren.
+- **E**: Om de temperatuur van de satellieten te meten.
+
+
+_**Correct antwoord**_:
+
+_**C**_: Om de tijdcorrectie van de ontvanger te bepalen.
+
+_**Uitleg**_:
+
+Een vierde satelliet is nodig om de tijdcorrectie van de GPS-ontvanger te bepalen. Zonder deze correctie zou de positiebepaling onnauwkeurig zijn. Drie satellieten zijn voldoende voor 3D positiebepaling, maar de vierde verhoogt de nauwkeurigheid aanzienlijk.
+
+#### Kaart Schaal Oefening *
+
+_**Vraag**_:
+
+Op een kaart met een schaal van 1:25.000 is een afstand 4 cm. Hoeveel meter is deze afstand in werkelijkheid?
+
+- **A**: 100 meter
+- **B**: 250 meter
+- **C**: 500 meter
+- **D**: 1000 meter
+- **E**: 2500 meter
+
+
+_**Correct antwoord**_:
+
+_**D**_: 1000 meter
+
+_**Uitleg**_:
+
+4 cm op de kaart is 4 * 25.000 cm in werkelijkheid. Dat is 100.000 cm, wat gelijk is aan 1000 meter.
+
+#### Pythagoras en Navigatie ***
+
+_**Vraag**_:
+
+Een wandelaar loopt 5 km naar het oosten, dan 3 km naar het noorden, en vervolgens 1 km naar het westen. Hoe ver is de wandelaar van zijn startpunt in een rechte lijn?
+
+- **A**: 5 km
+- **B**: 6 km
+- **C**: 7 km
+- **D**: 4 km
+- **E**: 4.47 km
+
+
+_**Correct antwoord**_:
+
+_**A**_: 5 km
+
+_**Uitleg**_:
+
+De wandelaar loopt netto 5-1 = 4 km naar het oosten en 3 km naar het noorden. Gebruik Pythagoras: 4² + 3² = c². Dus 16 + 9 = 25. De wortel van 25 is 5, dus c = 5 km.
+
+
+
+---
+
+### Hoofdstuk 4: Pythagoras in de Technologie
+
+#### Pixel Afstand Berekening *
+
+_**Vraag**_:
+
+Welke formule wordt gebruikt om de afstand tussen twee pixels (x1, y1) en (x2, y2) te berekenen in computer graphics?
+
+- **A**: afstand = (x2 - x1) + (y2 - y1)
+- **B**: afstand = √((x1 + x2)² + (y1 + y2)²)
+- **C**: afstand = √((x2 - x1)² - (y2 - y1)²)
+- **D**: afstand = √((x2 - x1)² + (y2 - y1)²)
+- **E**: afstand = |x2 - x1| + |y2 - y1|
+
+
+_**Correct antwoord**_:
+
+_**D**_: afstand = √((x2 - x1)² + (y2 - y1)²)
+
+_**Uitleg**_:
+
+De stelling van Pythagoras wordt gebruikt om de afstand tussen twee punten in een 2D-vlak te berekenen. De formule is de wortel van de som van de kwadraten van de verschillen in de x- en y-coördinaten.
+
+#### Robot Navigatie *
+
+_**Vraag**_:
+
+Hoe gebruikt een robot de stelling van Pythagoras om de kortste route tussen twee punten te bepalen?
+
+- **A**: Door de langste route te berekenen en die te vermijden.
+- **B**: Door de horizontale en verticale afstanden te meten en de schuine zijde te berekenen.
+- **C**: Door willekeurig een route te kiezen.
+- **D**: Door alleen de horizontale afstand te meten.
+- **E**: Door de som van alle mogelijke routes te berekenen en te delen door twee.
+
+
+_**Correct antwoord**_:
+
+_**B**_: Door de horizontale en verticale afstanden te meten en de schuine zijde te berekenen.
+
+_**Uitleg**_:
+
+De robot meet de horizontale en verticale afstanden tussen de twee punten, die de rechthoekszijden van een rechthoekige driehoek vormen. De kortste route is de schuine zijde, die berekend wordt met de stelling van Pythagoras.
+
+#### Botsingsdetectie in Games *
+
+_**Vraag**_:
+
+Hoe wordt de stelling van Pythagoras gebruikt bij botsingsdetectie in games met cirkelvormige objecten?
+
+- **A**: Om de oppervlakte van de objecten te berekenen.
+- **B**: Om de afstand tussen de middelpunten van de objecten te berekenen en te vergelijken met de som van hun stralen.
+- **C**: Om de omtrek van de objecten te berekenen.
+- **D**: Om de hoek tussen de objecten te berekenen.
+- **E**: Om de snelheid van de objecten te berekenen.
+
+
+_**Correct antwoord**_:
+
+_**B**_: Om de afstand tussen de middelpunten van de objecten te berekenen en te vergelijken met de som van hun stralen.
+
+_**Uitleg**_:
+
+Als de afstand tussen de middelpunten van twee cirkelvormige objecten kleiner is dan de som van hun stralen, dan botsen de objecten. De afstand tussen de middelpunten wordt berekend met de stelling van Pythagoras.
+
+#### Pixel Afstand Praktijkvoorbeeld **
+
+_**Vraag**_:
+
+Pixel A bevindt zich op (1, 4) en pixel B op (5, 7). Wat is de afstand tussen deze twee pixels?
+
+- **A**: 4 pixels
+- **B**: 5 pixels
+- **C**: 6 pixels
+- **D**: 7 pixels
+- **E**: 8 pixels
+
+
+_**Correct antwoord**_:
+
+_**B**_: 5 pixels
+
+_**Uitleg**_:
+
+De afstand is √((5-1)² + (7-4)²) = √(4² + 3²) = √(16 + 9) = √25 = 5.
+
+#### Robot Afstandsberekening **
+
+_**Vraag**_:
+
+Een robot detecteert een object. De horizontale afstand is 6 eenheden en de verticale afstand is 8 eenheden. Wat is de werkelijke afstand tot het object?
+
+- **A**: 10 eenheden
+- **B**: 12 eenheden
+- **C**: 14 eenheden
+- **D**: 2 eenheden
+- **E**: 48 eenheden
+
+
+_**Correct antwoord**_:
+
+_**A**_: 10 eenheden
+
+_**Uitleg**_:
+
+De afstand is √((6)² + (8)²) = √(36 + 64) = √100 = 10.
+
+#### Game Botsing Scenario **
+
+_**Vraag**_:
+
+Object A heeft middelpunt (0, 0) en straal 3. Object B heeft middelpunt (4, 0) en straal 1. Botsen deze objecten?
+
+- **A**: Ja, ze botsen.
+- **B**: Nee, ze botsen niet.
+- **C**: Misschien, afhankelijk van de snelheid.
+- **D**: Alleen als object A beweegt.
+- **E**: Alleen als object B beweegt.
+
+
+_**Correct antwoord**_:
+
+_**B**_: Nee, ze botsen niet.
+
+_**Uitleg**_:
+
+De afstand tussen de middelpunten is √((4-0)² + (0-0)²) = √16 = 4. De som van de stralen is 3 + 1 = 4. Omdat de afstand gelijk is aan de som van de stralen, raken ze elkaar net, maar botsen niet (er is geen overlap). Als de afstand kleiner was dan 4, zouden ze botsen.
+
+#### Antenne Plaatsing ***
+
+_**Vraag**_:
+
+Een antenne kan op positie A (1, 2, 3) of B (4, 5, 6) geplaatst worden. Een gebruiker bevindt zich op (7, 8, 9). Welke positie geeft de kleinste afstand tot de gebruiker?
+
+- **A**: Positie A
+- **B**: Positie B
+- **C**: Beide posities zijn even ver.
+- **D**: De afstand is niet te bepalen met de gegeven informatie.
+- **E**: Positie A is dichterbij, maar de signaalsterkte is slechter.
+
+
+_**Correct antwoord**_:
+
+_**B**_: Positie B
+
+_**Uitleg**_:
+
+Afstand(A) = √((7-1)² + (8-2)² + (9-3)²) = √(6² + 6² + 6²) = √(36 + 36 + 36) = √108 ≈ 10.39.
+Afstand(B) = √((7-4)² + (8-5)² + (9-6)²) = √(3² + 3² + 3²) = √(9 + 9 + 9) = √27 ≈ 5.20. Positie B is dichterbij.
+
+#### Robot Object Oppakken ***
+
+_**Vraag**_:
+
+Een robot bevindt zich op (2, 3). Een object bevindt zich op (5, 7). Er is een obstakel op (3, 5). Wat is de kortste afstand die de robot moet afleggen om het object te bereiken, rekening houdend met het obstakel (de robot kan niet door het obstakel)?
+
+- **A**: De rechte lijn afstand van (2,3) naar (5,7)
+- **B**: De robot kan het object niet bereiken.
+- **C**: Een route rondom het obstakel, berekend met de stelling van Pythagoras.
+- **D**: De som van de afstanden (2,3) naar (3,5) en (3,5) naar (5,7).
+- **E**: Een route via de oorsprong (0,0).
+
+
+_**Correct antwoord**_:
+
+_**C**_: Een route rondom het obstakel, berekend met de stelling van Pythagoras.
+
+_**Uitleg**_:
+
+De robot moet een route vinden die het obstakel vermijdt. Dit vereist het berekenen van verschillende mogelijke routes (bijvoorbeeld via punten net naast het obstakel) en het gebruik van de stelling van Pythagoras om de afstanden van die route segmenten te bepalen. De kortste van deze geldige routes is het antwoord. De directe lijn is √((5-2)² + (7-3)²) = √(3² + 4²) = √25 = 5. Echter, deze lijn kan door het obstakel gaan. Een pad via (2,3) -> (x,y) -> (5,7) waarbij (x,y) het obstakel (3,5) ontwijkt. Dit is een complexer padvindingsprobleem, maar de essentie is dat Pythagoras wordt gebruikt voor de segmentlengtes.
+
+#### Computer Graphics Rendering ***
+
+_**Vraag**_:
+
+In 3D rendering, hoe helpt de stelling van Pythagoras bij het correct weergeven van perspectief?
+
+- **A**: Het heeft geen invloed op perspectief.
+- **B**: Door de kleuren van de pixels te bepalen.
+- **C**: Door de afstand van objecten tot de camera te berekenen, waardoor objecten verder weg kleiner lijken.
+- **D**: Door de objecten te roteren.
+- **E**: Door de helderheid van het beeld aan te passen.
+
+
+_**Correct antwoord**_:
+
+_**C**_: Door de afstand van objecten tot de camera te berekenen, waardoor objecten verder weg kleiner lijken.
+
+_**Uitleg**_:
+
+De stelling van Pythagoras (in 3D) helpt bij het berekenen van de afstand van objecten (of hun vertices) tot de camera. Deze afstand (diepte) is cruciaal voor perspectiefprojectie, waarbij objecten die verder weg zijn kleiner worden weergegeven op het 2D-scherm.
+
+#### Draadloos Netwerk Optimalisatie ***
+
+_**Vraag**_:
+
+Waarom is het minimaliseren van de maximale afstand tot een gebruikerslocatie belangrijk bij het plaatsen van een antenne in een draadloos netwerk?
+
+- **A**: Het is niet belangrijk, de gemiddelde afstand is voldoende.
+- **B**: Om de kosten van de installatie te verlagen.
+- **C**: Om ervoor te zorgen dat alle gebruikers een acceptabele signaalsterkte hebben, zelfs degenen die het verst weg zijn.
+- **D**: Om de antenne zo hoog mogelijk te plaatsen.
+- **E**: Om de antenne uit het zicht te plaatsen.
+
+
+_**Correct antwoord**_:
+
+_**C**_: Om ervoor te zorgen dat alle gebruikers een acceptabele signaalsterkte hebben, zelfs degenen die het verst weg zijn.
+
+_**Uitleg**_:
+
+Signaalsterkte neemt af met de afstand. Het minimaliseren van de maximale afstand tot een gebruiker (vaak de 'cell edge' gebruiker) garandeert dat zelfs de gebruikers die zich het verst van de antenne bevinden, een voldoende sterk signaal ontvangen voor een betrouwbare verbinding. Dit zorgt voor een betere en meer consistente gebruikerservaring in het hele dekkingsgebied.
+
+
+
+---
+
+### Hoofdstuk 5: Pythagoras in de Kunst en het Design
+
+#### De Gulden Snede: Wat is Phi? *
+
+_**Vraag**_:
+
+Wat is de benaderende waarde van de gulden snede (φ)?
+
+- **A**: 3.141
+- **B**: 1.414
+- **C**: 1.618
+- **D**: 2.718
+- **E**: 0.618
+
+
+_**Correct antwoord**_:
+
+_**C**_: 1.618
+
+_**Uitleg**_:
+
+De gulden snede (φ, phi) is een irrationeel getal dat ongeveer gelijk is aan 1.6180339887... Het komt voor in diverse natuurlijke en artistieke contexten en wordt vaak geassocieerd met esthetische harmonie.
+
+#### Gulden Rechthoek Constructie **
+
+_**Vraag**_:
+
+Hoe begin je met de constructie van een gulden rechthoek volgens de beschreven methode?
+
+- **A**: Met een gelijkzijdige driehoek.
+- **B**: Met een cirkel.
+- **C**: Met een vierkant.
+- **D**: Met een rechthoek met willekeurige afmetingen.
+- **E**: Met een gulden spiraal.
+
+
+_**Correct antwoord**_:
+
+_**C**_: Met een vierkant.
+
+_**Uitleg**_:
+
+De klassieke constructie van een gulden rechthoek start met een vierkant. Men halveert een zijde van het vierkant, trekt een lijn van dit middelpunt naar een tegenoverliggend hoekpunt (deze lengte wordt vaak met Pythagoras berekend), en gebruikt deze lengte om de langere zijde van de gulden rechthoek te bepalen.
+
+#### Pythagoras en Muziek: Octaaf *
+
+_**Vraag**_:
+
+Welke verhouding tussen snaarlengtes produceert een octaaf?
+
+- **A**: 3:2
+- **B**: 4:3
+- **C**: 1:1
+- **D**: 2:1
+- **E**: 5:4
+
+
+_**Correct antwoord**_:
+
+_**D**_: 2:1
+
+_**Uitleg**_:
+
+Een octaaf wordt geproduceerd wanneer de lengte van een trillende snaar wordt gehalveerd (of verdubbeld), wat resulteert in een frequentieverhouding van 2:1. Dit betekent dat de toon een octaaf hoger (of lager) klinkt. Dit was een van de fundamentele ontdekkingen van Pythagoras in de muziektheorie.
+
+#### Muzikale Intervallen **
+
+_**Vraag**_:
+
+Welke frequentieverhouding komt overeen met een kwint?
+
+- **A**: 4:3
+- **B**: 2:1
+- **C**: 5:3
+- **D**: 3:2
+- **E**: 1:2
+
+
+_**Correct antwoord**_:
+
+_**D**_: 3:2
+
+_**Uitleg**_:
+
+Een reine kwint, een fundamenteel harmonisch interval, heeft een frequentieverhouding van 3:2. Dit betekent dat de frequentie van de hogere toon 1.5 keer zo hoog is als de frequentie van de lagere toon. Dit is ook een ontdekking die aan Pythagoras wordt toegeschreven.
+
+#### Gulden Snede in Grafisch Ontwerp *
+
+_**Vraag**_:
+
+Hoe kan de gulden snede worden toegepast in grafisch ontwerp?
+
+- **A**: Om willekeurige elementen te plaatsen.
+- **B**: Om de kleurkeuze te bepalen.
+- **C**: Om een evenwichtige en esthetisch aangename lay-out te creëren.
+- **D**: Om de lettergrootte wiskundig te bepalen.
+- **E**: Om de marges altijd gelijk te maken.
+
+
+_**Correct antwoord**_:
+
+_**C**_: Om een evenwichtige en esthetisch aangename lay-out te creëren.
+
+_**Uitleg**_:
+
+De gulden snede kan worden gebruikt als richtlijn voor de proporties en plaatsing van elementen in grafisch ontwerp om een visueel evenwichtige, natuurlijke en harmonieuze compositie te bereiken. Dit kan bijvoorbeeld door de afmetingen van blokken, de plaatsing van focuspunten, of de verhoudingen in een logo te baseren op φ.
+
+#### Website Lay-out en de Gulden Snede **
+
+_**Vraag**_:
+
+Waar kan de gulden snede specifiek voor gebruikt worden bij de lay-out van een website?
+
+- **A**: De kleur van de achtergrond.
+- **B**: De verhouding tussen de breedte van de hoofdinhoud en een zijbalk.
+- **C**: De exacte grootte van alle afbeeldingen.
+- **D**: De keuze van het lettertype.
+- **E**: De snelheid van animaties.
+
+
+_**Correct antwoord**_:
+
+_**B**_: De verhouding tussen de breedte van de hoofdinhoud en een zijbalk.
+
+_**Uitleg**_:
+
+De gulden snede kan worden gebruikt om de verhouding tussen de breedte van de hoofdinhoud (content area) en een zijbalk (sidebar) te bepalen. Als de totale breedte bijvoorbeeld 960 pixels is, kan de hoofdinhoud ~593 pixels zijn en de zijbalk ~367 pixels (960 / 1.618 ≈ 593), wat bijdraagt aan een visueel aantrekkelijke en evenwichtige lay-out.
+
+#### Logo Ontwerp met Pythagoras ***
+
+_**Vraag**_:
+
+Stel, je ontwerpt een logo met behulp van rechthoekige driehoeken afgeleid van een vierkant. De zijde van het vierkant is 'x'. Wat is de lengte van de diagonaal van een rechthoek gevormd door het halveren van dit vierkant (dus een rechthoek met zijden x en x/2)?
+
+- **A**: x/2
+- **B**: x√2
+- **C**: (x/2)√3
+- **D**: (x/2)√5
+- **E**: x√5
+
+
+_**Correct antwoord**_:
+
+_**D**_: (x/2)√5
+
+_**Uitleg**_:
+
+De rechthoek heeft zijden 'x' (de oorspronkelijke zijde van het vierkant) en 'x/2' (de gehalveerde zijde). De diagonaal 'd' van deze rechthoek kan worden berekend met de stelling van Pythagoras: d² = x² + (x/2)².
+d² = x² + x²/4
+d² = (4x²/4) + (x²/4)
+d² = 5x²/4
+d = √(5x²/4) = (√5 * √x²) / √4 = (x√5) / 2, oftewel (x/2)√5.
+
+#### Analyse van de Mona Lisa **
+
+_**Vraag**_:
+
+Welk element of welke compositie van de Mona Lisa wordt vaak geanalyseerd in relatie tot de verhoudingen van de gulden snede?
+
+- **A**: De plooien van haar kleding.
+- **B**: De kleuren van het landschap op de achtergrond.
+- **C**: De proporties en plaatsing van haar gezicht en lichaam.
+- **D**: De textuur van het doek.
+- **E**: De handtekening van Leonardo da Vinci.
+
+
+_**Correct antwoord**_:
+
+_**C**_: De proporties en plaatsing van haar gezicht en lichaam.
+
+_**Uitleg**_:
+
+Verschillende analyses suggereren dat Leonardo da Vinci de gulden snede (of benaderingen daarvan) gebruikte in de compositie van de Mona Lisa, met name in de proporties van haar gezicht, de plaatsing van haar ogen, neus, mond, en de verhoudingen van haar lichaam ten opzichte van het doek. Dit draagt bij aan de vermeende harmonie en aantrekkingskracht van het schilderij.
+
+#### Praktische Toepassing: Poster Ontwerp **
+
+_**Vraag**_:
+
+Waar op een poster zou je belangrijke elementen plaatsen volgens de "Rule of Thirds" (een vereenvoudiging gerelateerd aan de gulden snede) om de aandacht te trekken en een dynamische compositie te creëren?
+
+- **A**: Precies in het midden van de poster.
+- **B**: Alleen in de uiterste hoeken van de poster.
+- **C**: Op of nabij de snijpunten van de lijnen die de poster in negen gelijke rechthoeken verdelen.
+- **D**: Willekeurig verspreid over de poster voor een chaotisch effect.
+- **E**: Altijd aan de linkerkant van de poster.
+
+
+_**Correct antwoord**_:
+
+_**C**_: Op of nabij de snijpunten van de lijnen die de poster in negen gelijke rechthoeken verdelen.
+
+_**Uitleg**_:
+
+De Regel van Derden verdeelt een compositie in negen gelijke delen met twee horizontale en twee verticale lijnen. Belangrijke elementen worden vaak op of nabij de vier snijpunten van deze lijnen geplaatst. Dit creëert meer spanning, energie en interesse in de compositie dan wanneer het onderwerp simpelweg in het midden wordt geplaatst. Het is een praktische toepassing die vaak wordt geassocieerd met de esthetische principes van de gulden snede.
+
+#### Harmonie in Muziek ***
+
+_**Vraag**_:
+
+Waarom worden bepaalde verhoudingen tussen snaarlengtes (en dus frequenties), zoals 2:1 (octaaf) en 3:2 (kwint), als harmonieus of consonant ervaren volgens de Pythagorese muziektheorie?
+
+- **A**: Omdat ze complexe irrationale getallen bevatten die de hersenen stimuleren.
+- **B**: Omdat ze gebaseerd zijn op toevallige frequenties die prettig klinken.
+- **C**: Omdat ze kunnen worden uitgedrukt in eenvoudige verhoudingen van kleine gehele getallen, wat leidt tot golfpatronen die goed samenvallen.
+- **D**: Omdat ze afhankelijk zijn van de culturele achtergrond en stemming van de luisteraar, en geen objectieve basis hebben.
+- **E**: Omdat ze de meeste dissonantie veroorzaken, wat aantrekkelijk is.
+
+
+_**Correct antwoord**_:
+
+_**C**_: Omdat ze kunnen worden uitgedrukt in eenvoudige verhoudingen van kleine gehele getallen, wat leidt tot golfpatronen die goed samenvallen.
+
+_**Uitleg**_:
+
+Pythagoras en zijn volgelingen ontdekten dat de meest harmonieuze muzikale intervallen overeenkomen met eenvoudige verhoudingen van kleine gehele getallen (bijv. 2:1 voor een octaaf, 3:2 voor een reine kwint, 4:3 voor een reine kwart). Fysisch gezien betekent dit dat de geluidsgolven van tonen in deze verhoudingen periodiek op een "nette" manier samenvallen, wat leidt tot een stabiel en aangenaam geluid. Complexe verhoudingen produceren meer "botsende" golfpatronen, wat als dissonant wordt ervaren.
+
+
+
+---
+`;
+
+    let score = 0;
+    let totalCorrectAnswers = 0;
+    const quizContainer = document.getElementById('quiz-container');
+    const scoreDisplay = document.getElementById('score');
+    const loadingMessage = document.getElementById('loading-message');
+
+    /**
+     * Parses the Markdown string into a structured quiz data object.
+     * @param {string} markdown - The markdown content of the quiz.
+     * @returns {Array} - An array of chapter objects, each with questions.
+     */
+    function parseQuizMarkdown(markdown) {
+        const chapters = [];
+        let currentChapter = null;
+        let currentQuestion = null;
+        let parsingState = null; // null, 'question', 'options', 'answer_marker', 'answer', 'explanation'
+
+        const lines = markdown.split('\n');
+
+        for (let i = 0; i < lines.length; i++) {
+            let line = lines[i].trim();
+
+            if (line.startsWith('### Hoofdstuk')) {
+                if (currentChapter && currentQuestion && currentQuestion.question && currentQuestion.correctAnswer && Object.keys(currentQuestion.options).length > 0 && currentQuestion.explanation) {
+                    currentChapter.questions.push(currentQuestion);
+                }
+                if (currentChapter && currentChapter.questions.length > 0) {
+                    chapters.push(currentChapter);
+                }
+
+                currentChapter = { title: line.substring(4).trim(), questions: [] };
+                currentQuestion = null;
+                parsingState = null;
+            } else if (currentChapter && line.startsWith('#### ')) {
+                if (currentQuestion && currentQuestion.question && currentQuestion.correctAnswer && Object.keys(currentQuestion.options).length > 0 && currentQuestion.explanation) {
+                    currentChapter.questions.push(currentQuestion);
+                }
+                currentQuestion = {
+                    id: `ch${chapters.length}-q${currentChapter.questions.length}`,
+                    question: "",
+                    options: {},
+                    correctAnswer: "",
+                    explanation: "",
+                    isAnswered: false
+                };
+                parsingState = null;
+            } else if (currentQuestion) {
+                if (line.startsWith('_**Vraag**_:')) {
+                    parsingState = 'question';
+                    let questionTextOnSameLine = line.substring('_**Vraag**_:'.length).trim();
+                    if (questionTextOnSameLine) {
+                        currentQuestion.question = questionTextOnSameLine;
+                    } else {
+                        // Question text is on the next non-empty line(s)
+                        // This state will be handled by the next 'parsingState === question' block
+                        currentQuestion.question = ""; // Initialize as empty, to be filled by next lines
+                    }
+                } else if (parsingState === 'question') {
+                    if (line !== "" && !line.startsWith('- **') && !line.startsWith('_**Correct antwoord**_:')) {
+                        // This is a line of the question text
+                        if (currentQuestion.question === "") { // First line of question text
+                            currentQuestion.question = line;
+                        } else { // Subsequent lines of question text
+                            currentQuestion.question += " " + line;
+                        }
+                    } else if (line.startsWith('- **')) {
+                        // End of question text, start of options
+                        parsingState = 'options';
+                        // Reprocess this line as an option
+                        i--; // Decrement i to re-process this line in the next iteration
+                    } else if (line.startsWith('_**Correct antwoord**_:')) {
+                        // End of question text, start of correct answer marker
+                        parsingState = 'answer_marker';
+                        // Reprocess this line
+                        i--;
+                    }
+                    // If line is empty and currentQuestion.question is still empty, it means we are skipping empty lines after _**Vraag**_:
+
+                } else if (line.startsWith('- **')) { // Options processing
+                    parsingState = 'options'; // Ensure state is correct
+                    const optionMatch = line.match(/- \*\*(A|B|C|D|E|F)\*\*: (.*)/);
+                    if (optionMatch) {
+                        currentQuestion.options[optionMatch[1]] = optionMatch[2].trim();
+                    }
+                } else if (line.startsWith('_**Correct antwoord**_:')) {
+                    parsingState = 'answer_marker';
+                    // The actual answer is on a subsequent line or same line if format changes
+                    let answerOnSameLine = line.substring('_**Correct antwoord**_:'.length).trim();
+                    const correctMatchSameLine = answerOnSameLine.match(/^_?\*\*(A|B|C|D|E|F)\*\*:?/);
+                    if (correctMatchSameLine) {
+                        currentQuestion.correctAnswer = correctMatchSameLine[1];
+                        parsingState = 'answer_done';
+                    }
+                    // If not on the same line, next block will handle it
+                } else if (parsingState === 'answer_marker' && line !== "") {
+                    const correctMatch = line.match(/^_?\*\*(A|B|C|D|E|F)\*\*:?/);
+                    if (correctMatch) {
+                        currentQuestion.correctAnswer = correctMatch[1];
+                        parsingState = 'answer_done';
+                    }
+                } else if (line.startsWith('_**Uitleg**_:')) {
+                    parsingState = 'explanation';
+                    let explanationTextOnSameLine = line.substring('_**Uitleg**_:'.length).trim();
+                    if (explanationTextOnSameLine) {
+                        currentQuestion.explanation = explanationTextOnSameLine;
+                    } else {
+                        currentQuestion.explanation = ""; // Initialize as empty
+                    }
+                } else if (parsingState === 'explanation') {
+                    if (line !== "" && !line.startsWith('####') && !line.startsWith('---')) {
+                        if (currentQuestion.explanation === "") {
+                            currentQuestion.explanation = line;
+                        } else {
+                            currentQuestion.explanation += " " + line;
+                        }
+                    } else if (line.startsWith('####') || line.startsWith('---')) {
+                        // End of explanation, start of new question or chapter
+                        parsingState = null; // Reset state
+                        i--; // Reprocess this line
+                    }
+                    // If line is empty and currentQuestion.explanation is still empty, it means we are skipping empty lines after _**Uitleg**_:
+                }
+            }
+        }
+
+        // Push the last processed question and chapter
+        if (currentChapter && currentQuestion && currentQuestion.question && currentQuestion.correctAnswer && Object.keys(currentQuestion.options).length > 0 && currentQuestion.explanation) {
+            currentChapter.questions.push(currentQuestion);
+        }
+        if (currentChapter && currentChapter.questions.length > 0) {
+            chapters.push(currentChapter);
+        }
+
+        // Filter out chapters with no valid questions and questions with missing parts
+        const validChapters = [];
+        for (const chap of chapters) {
+            const validQuestions = chap.questions.filter(q =>
+                q.question &&
+                q.correctAnswer &&
+                Object.keys(q.options).length > 0 &&
+                q.explanation
+            );
+            if (validQuestions.length > 0) {
+                validChapters.push({ ...chap, questions: validQuestions });
+            }
+        }
+        return validChapters;
+    }
+
+
+    /**
+     * Creates and appends flashcards to the DOM.
+     * @param {Array} chaptersData - Array of chapter objects from the parser.
+     */
+    function displayQuiz(chaptersData) {
+        if (loadingMessage) loadingMessage.remove();
+
+        if (!chaptersData || chaptersData.length === 0) {
+            quizContainer.innerHTML = '<p class="text-center text-red-500">Kon de quiz niet laden. Controleer de data. Mogelijk een parseerfout.</p>';
+            console.error("Quiz data is empty or invalid after parsing.", chaptersData);
+            return;
+        }
+
+        chaptersData.forEach(chapter => {
+            const chapterDiv = document.createElement('div');
+            chapterDiv.className = 'mb-12';
+
+            const chapterTitleEl = document.createElement('h2');
+            chapterTitleEl.className = 'text-3xl font-bold mb-6 text-brand-orange border-b-2 border-brand-yellow pb-2';
+            chapterTitleEl.textContent = chapter.title;
+            chapterDiv.appendChild(chapterTitleEl);
+
+            const flashcardsGrid = document.createElement('div');
+            flashcardsGrid.className = 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6';
+
+            chapter.questions.forEach(question => {
+                const cardContainer = document.createElement('div');
+                cardContainer.className = 'flashcard-container';
+
+                const card = document.createElement('div');
+                card.className = 'flashcard';
+                card.id = `card-${question.id}`;
+
+                // --- Card Front ---
+                const cardFront = document.createElement('div');
+                cardFront.className = 'flashcard-front bg-white';
+
+                const questionTitle = document.createElement('h3');
+                questionTitle.className = 'text-lg font-semibold mb-4 text-brand-grey leading-tight';
+                questionTitle.innerHTML = question.question;
+                cardFront.appendChild(questionTitle);
+
+                const optionsDiv = document.createElement('div');
+                optionsDiv.className = 'space-y-3 options-container flex-grow';
+                Object.entries(question.options).forEach(([key, value]) => {
+                    const label = document.createElement('label');
+                    label.className = 'flex items-center p-3 rounded-lg border border-gray-300 hover:bg-gray-100 cursor-pointer text-sm';
+
+                    const radio = document.createElement('input');
+                    radio.type = 'radio';
+                    radio.name = `q-${question.id}`;
+                    radio.value = key;
+                    radio.className = 'mr-3 text-brand-teal focus:ring-brand-orange focus:ring-2';
+
+                    radio.addEventListener('change', () => handleAnswer(card, question, key));
+
+                    const span = document.createElement('span');
+                    span.textContent = `${key}: ${value}`;
+
+                    label.appendChild(radio);
+                    label.appendChild(span);
+                    optionsDiv.appendChild(label);
+                });
+                cardFront.appendChild(optionsDiv);
+                card.appendChild(cardFront);
+
+                // --- Card Back ---
+                const cardBack = document.createElement('div');
+                cardBack.className = 'flashcard-back';
+
+                const resultText = document.createElement('p');
+                resultText.id = `result-${question.id}`;
+                resultText.className = 'text-2xl font-bold mb-3';
+                cardBack.appendChild(resultText);
+
+                const correctAnswerText = document.createElement('p');
+                correctAnswerText.id = `correct-ans-${question.id}`;
+                correctAnswerText.className = 'text-md mb-1';
+                correctAnswerText.innerHTML = `Correct antwoord: <strong>${question.correctAnswer}</strong>. ${question.options[question.correctAnswer] || ''}`;
+                cardBack.appendChild(correctAnswerText);
+
+                const explanationText = document.createElement('p');
+                explanationText.id = `explanation-${question.id}`;
+                explanationText.className = 'text-sm mt-2';
+                explanationText.textContent = question.explanation;
+                cardBack.appendChild(explanationText);
+
+                card.appendChild(cardBack);
+                cardContainer.appendChild(card);
+                flashcardsGrid.appendChild(cardContainer);
+            });
+            chapterDiv.appendChild(flashcardsGrid);
+            quizContainer.appendChild(chapterDiv);
+        });
+    }
+
+    /**
+     * Handles answer selection, flips card, updates score, and triggers confetti.
+     * @param {HTMLElement} cardEl - The flashcard element.
+     * @param {Object} question - The question object.
+     * @param {string} selectedAnswerKey - The key of the selected answer (A, B, C...).
+     */
+    function handleAnswer(cardEl, question, selectedAnswerKey) {
+        if (question.isAnswered) return; // Prevent re-answering
+
+        question.isAnswered = true;
+        cardEl.classList.add('is-flipped');
+
+        const isCorrect = selectedAnswerKey === question.correctAnswer;
+        const cardBack = cardEl.querySelector('.flashcard-back');
+        const resultText = cardBack.querySelector(`#result-${question.id}`);
+
+        cardEl.querySelectorAll('.options-container input[type="radio"]').forEach(radio => radio.disabled = true);
+
+        if (isCorrect) {
+            resultText.textContent = 'Juist!';
+            cardBack.classList.add('bg-brand-bg-correct', 'text-brand-text-correct');
+            cardBack.classList.remove('bg-brand-bg-incorrect', 'text-brand-text-incorrect');
+            score++;
+            totalCorrectAnswers++; // Increment total correct answers
+
+            // Confetti logic: Trigger after every 5 correct answers
+            if (totalCorrectAnswers > 0 && totalCorrectAnswers % 5 === 0) {
+                triggerConfetti();
+            }
+        } else {
+            resultText.textContent = 'Fout!';
+            cardBack.classList.add('bg-brand-bg-incorrect', 'text-brand-text-incorrect');
+            cardBack.classList.remove('bg-brand-bg-correct', 'text-brand-text-correct');
+        }
+        scoreDisplay.textContent = score;
+    }
+
+    /**
+     * Triggers confetti animation.
+     * Checks if the confetti function is available before calling.
+     */
+    function triggerConfetti() {
+        // Check if the confetti library is loaded and the function exists
+        if (typeof confetti === 'function') {
+            confetti({
+                particleCount: 150, // Number of confetti particles
+                spread: 80,         // How far the confetti spreads (degrees)
+                origin: { y: 0.6 }, // Origin point of the confetti (0.6 means 60% from the top of the viewport)
+                colors: ['#f04b20', '#009cab', '#f0cf1f', '#ffffff'] // School colors + white
+            });
+        } else {
+            // Fallback or error message if confetti is not available
+            console.error('Confetti function is not loaded or available.');
+        }
+    }
+
+    // Initialize the quiz when the DOM is ready
+    document.addEventListener('DOMContentLoaded', () => {
+        const quizData = parseQuizMarkdown(markdownData);
+        displayQuiz(quizData);
+    });
+
+</script>
+</body>
+</html>

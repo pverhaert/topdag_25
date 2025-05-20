@@ -1,0 +1,1291 @@
+
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pythagoras in het Dagelijks Leven: Interactieve Verkenning</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/mathjs@11.5.0/lib/browser/math.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        .canvas-container {
+            position: relative;
+            touch-action: none;
+        }
+        .drag-point {
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background-color: #3b82f6;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 10;
+            transform: translate(-50%, -50%);
+            touch-action: none;
+        }
+        .golden-ratio-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            border: 1px solid #ccc;
+        }
+        .golden-rect {
+            position: absolute;
+            border: 2px solid #4c1d95;
+        }
+        .golden-spiral {
+            position: absolute;
+            border: 1px solid #8b5cf6;
+            border-radius: 50%;
+        }
+        .hidden {
+            display: none;
+        }
+        .feedback-correct {
+            color: #22c55e;
+        }
+        .feedback-incorrect {
+            color: #ef4444;
+        }
+        input[type="number"] {
+            max-width: 120px;
+        }
+        #triangleCanvas {
+            border: 1px solid #e5e7eb;
+            touch-action: none;
+        }
+        #goldenRatioCanvas {
+            border: 1px solid #e5e7eb;
+        }
+        .button {
+            background-color: #3b82f6;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 0.25rem;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .button:hover {
+            background-color: #2563eb;
+        }
+        .section {
+            margin-bottom: 3rem;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            background-color: #f9fafb;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .formula {
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+        }
+        .point-label {
+            position: absolute;
+            font-weight: bold;
+            transform: translate(-50%, -50%);
+        }
+        @media (max-width: 640px) {
+            .canvas-container {
+                height: 250px;
+            }
+            .golden-ratio-container {
+                height: 200px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-10 text-center">
+            <h1 class="text-4xl font-bold text-indigo-800 mb-2">Pythagoras in het Dagelijks Leven</h1>
+            <p class="text-xl text-gray-600">Ontdek de kracht van wiskunde door interactie</p>
+        </header>
+
+        <section class="section" id="introduction">
+            <h2 class="text-2xl font-bold text-indigo-700 mb-4">Inleiding: De Stelling van Pythagoras</h2>
+            <p class="mb-4">
+                De stelling van Pythagoras is een fundamenteel concept in de meetkunde. De formule luidt:
+                <span class="formula text-xl mx-1">a² + b² = c²</span>
+            </p>
+            <p class="mb-4">
+                Hierbij zijn <span class="formula">a</span> en <span class="formula">b</span> de lengtes van de rechthoekszijden, 
+                en <span class="formula">c</span> is de lengte van de schuine zijde (hypotenusa). Deze stelling 
+                geldt alleen voor rechthoekige driehoeken, waarbij de hoek tussen <span class="formula">a</span> en 
+                <span class="formula">b</span> precies 90 graden is.
+            </p>
+        </section>
+
+        <!-- Verplaatsbare Rechthoekige Driehoek -->
+        <section class="section" id="interactive-triangle">
+            <h2 class="text-2xl font-bold text-indigo-700 mb-4">Verplaatsbare Rechthoekige Driehoek</h2>
+            <p class="mb-4">
+                Verplaats de hoekpunten van de driehoek om te zien hoe de lengtes veranderen en hoe 
+                de stelling van Pythagoras in alle gevallen geldig blijft. De rechte hoek blijft altijd behouden.
+            </p>
+            
+            <div class="flex flex-col md:flex-row gap-6">
+                <div class="canvas-container w-full md:w-2/3 h-80 bg-white relative">
+                    <canvas id="triangleCanvas" width="600" height="400" class="w-full h-full"></canvas>
+                    <div id="pointA" class="drag-point bg-red-500"></div>
+                    <div id="pointB" class="drag-point bg-green-500"></div>
+                    <div id="pointC" class="drag-point bg-blue-500"></div>
+                    <div class="point-label text-red-500" id="labelA">A</div>
+                    <div class="point-label text-green-500" id="labelB">B</div>
+                    <div class="point-label text-blue-500" id="labelC">C</div>
+                </div>
+                
+                <div class="w-full md:w-1/3 bg-white p-4 rounded shadow-sm">
+                    <h3 class="text-xl font-semibold text-indigo-600 mb-3">Waarden</h3>
+                    <div class="mb-3">
+                        <label class="block text-gray-700">Zijde a (rechthoekszijde):</label>
+                        <div id="sideA" class="formula text-lg">0</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-gray-700">Zijde b (rechthoekszijde):</label>
+                        <div id="sideB" class="formula text-lg">0</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-gray-700">Zijde c (schuine zijde):</label>
+                        <div id="sideC" class="formula text-lg">0</div>
+                    </div>
+                    <div class="mt-5 p-3 bg-indigo-50 rounded">
+                        <div class="text-gray-800">Verificatie:</div>
+                        <div id="verification" class="formula text-lg">a² + b² = c²</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pythagoras Oefenmodule -->
+        <section class="section" id="practice-module">
+            <h2 class="text-2xl font-bold text-indigo-700 mb-4">Pythagoras Oefenmodule</h2>
+            <p class="mb-4">
+                Oefen het toepassen van de stelling van Pythagoras. Twee zijden van een rechthoekige driehoek
+                zijn gegeven. Bereken de derde zijde en controleer je antwoord.
+            </p>
+            
+            <div class="bg-white p-6 rounded shadow-sm">
+                <div class="md:flex items-start">
+                    <div class="md:w-1/2 pr-4">
+                        <h3 class="text-xl font-semibold text-indigo-600 mb-4">Oefening</h3>
+                        
+                        <div id="exerciseContainer">
+                            <div class="mb-4" id="exerciseDescription">
+                                Bereken de ontbrekende zijde van de rechthoekige driehoek.
+                            </div>
+                            
+                            <canvas id="exerciseVisual" class="w-full h-56 bg-gray-50 mb-4"></canvas>
+                            
+                            <div class="mb-4 flex flex-wrap gap-2 items-center">
+                                <label class="mr-2">Zijde a:</label>
+                                <span id="exerciseSideA" class="formula mr-4">3</span>
+                                
+                                <label class="mr-2">Zijde b:</label>
+                                <span id="exerciseSideB" class="formula mr-4">4</span>
+                                
+                                <label class="mr-2">Zijde c:</label>
+                                <div class="flex items-center">
+                                    <input type="number" id="exerciseAnswer" step="0.01" min="0" 
+                                           class="border rounded py-1 px-2 text-center" placeholder="?">
+                                    <button id="checkAnswer" class="button ml-2">Controleer</button>
+                                </div>
+                            </div>
+                            
+                            <div id="exerciseFeedback" class="p-3 rounded hidden"></div>
+                        </div>
+                        
+                        <button id="newExercise" class="button mt-4">Nieuwe Oefening</button>
+                    </div>
+                    
+                    <div class="md:w-1/2 mt-6 md:mt-0">
+                        <h3 class="text-xl font-semibold text-indigo-600 mb-4">Formule-helper</h3>
+                        <div class="bg-gray-50 p-4 rounded">
+                            <p class="mb-2">Om de schuine zijde te berekenen:</p>
+                            <div class="formula mb-4">c = √(a² + b²)</div>
+                            
+                            <p class="mb-2">Om een rechthoekszijde te berekenen:</p>
+                            <div class="formula mb-4">a = √(c² - b²)</div>
+                            <div class="formula mb-4">b = √(c² - a²)</div>
+                            
+                            <div class="mt-4 text-sm text-gray-600">
+                                Tip: Rond je antwoord af op 2 decimalen als dat nodig is.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactieve Voorbeelden - Pythagoras in Kunst en Design -->
+        <section class="section" id="art-design">
+            <h2 class="text-2xl font-bold text-indigo-700 mb-4">Interactieve Voorbeelden - Pythagoras in Kunst en Design</h2>
+            <p class="mb-4">
+                Ontdek hoe de stelling van Pythagoras gerelateerd is aan de gulden snede, 
+                een belangrijke verhouding in kunst, architectuur en design.
+            </p>
+            
+            <div class="mb-6 bg-white p-6 rounded shadow-sm">
+                <h3 class="text-xl font-semibold text-indigo-600 mb-4">De Gulden Snede en Pythagoras</h3>
+                
+                <p class="mb-4">
+                    De gulden snede (ongeveer 1:1.618 of phi φ) is een speciale verhouding die nauw verwant is aan 
+                    de stelling van Pythagoras. De constructie van een gulden rechthoek maakt gebruik van rechthoekige 
+                    driehoeken en de stelling van Pythagoras.
+                </p>
+                
+                <div class="flex flex-col md:flex-row gap-6 items-center">
+                    <div class="w-full md:w-2/3">
+                        <canvas id="goldenRatioCanvas" width="600" height="400" class="w-full h-80"></canvas>
+                    </div>
+                    
+                    <div class="w-full md:w-1/3">
+                        <div class="mb-4">
+                            <h4 class="text-lg font-medium text-indigo-600">Constructie met Pythagoras</h4>
+                            <p class="text-sm text-gray-600 mt-1">
+                                Begin met een vierkant, gebruik de stelling van Pythagoras om de gulden rechthoek te construeren.
+                            </p>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <button id="showGoldenConstruction" class="button w-full">Toon Constructie</button>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <button id="showGoldenSpiral" class="button w-full">Toon Gulden Spiraal</button>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <button id="resetGoldenRatio" class="button w-full bg-gray-500 hover:bg-gray-600">Reset</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mb-6 bg-white p-6 rounded shadow-sm">
+                <h3 class="text-xl font-semibold text-indigo-600 mb-4">Ontwerp met de Gulden Snede</h3>
+                
+                <p class="mb-4">
+                    De gulden snede wordt veel gebruikt in kunst en design voor esthetisch aangename composities.
+                    Interactief kun je zien hoe deze verhouding werkt in ontwerp.
+                </p>
+                
+                <div class="golden-ratio-container bg-white" id="designContainer">
+                    <!-- Interactive design elements will be added here -->
+                </div>
+                
+                <div class="flex flex-wrap gap-3 mt-4">
+                    <button id="showLogoDesign" class="button">Logo Ontwerp</button>
+                    <button id="showPaintingAnalysis" class="button">Schilderij Analyse</button>
+                    <button id="showWebDesign" class="button">Webdesign Verhoudingen</button>
+                </div>
+            </div>
+        </section>
+
+        <footer class="mt-12 mb-6 text-center text-gray-600 text-sm">
+            <p>
+                Deze interactieve webpagina is ontworpen voor ASO leerlingen in de richting wetenschappen-wiskunde.
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Global variables
+        const canvasPadding = 20;
+        let isDragging = false;
+        let currentPoint = null;
+        
+        // Initialize Triangle Canvas
+        const triangleCanvas = document.getElementById('triangleCanvas');
+        const triangleCtx = triangleCanvas.getContext('2d');
+        
+        // Point coordinates (will be properly scaled on window load)
+        let pointAPosition = { x: 100, y: 300 };
+        let pointBPosition = { x: 400, y: 300 };
+        let pointCPosition = { x: 100, y: 100 };
+        
+        // Initialize Golden Ratio Canvas
+        const goldenRatioCanvas = document.getElementById('goldenRatioCanvas');
+        const goldenRatioCtx = goldenRatioCanvas.getContext('2d');
+        
+        // Exercise variables
+        let exerciseType = "findC"; // findC, findA, or findB
+        let exerciseValueA = 3;
+        let exerciseValueB = 4;
+        let exerciseValueC = 5;
+        
+        // Update HTML elements that correspond to point positions
+        function updateDOMPoints() {
+            const pointA = document.getElementById('pointA');
+            const pointB = document.getElementById('pointB');
+            const pointC = document.getElementById('pointC');
+            const labelA = document.getElementById('labelA');
+            const labelB = document.getElementById('labelB');
+            const labelC = document.getElementById('labelC');
+            
+            pointA.style.left = `${pointAPosition.x}px`;
+            pointA.style.top = `${pointAPosition.y}px`;
+            pointB.style.left = `${pointBPosition.x}px`;
+            pointB.style.top = `${pointBPosition.y}px`;
+            pointC.style.left = `${pointCPosition.x}px`;
+            pointC.style.top = `${pointCPosition.y}px`;
+            
+            labelA.style.left = `${pointAPosition.x}px`;
+            labelA.style.top = `${pointAPosition.y - 20}px`;
+            labelB.style.left = `${pointBPosition.x}px`;
+            labelB.style.top = `${pointBPosition.y - 20}px`;
+            labelC.style.left = `${pointCPosition.x}px`;
+            labelC.style.top = `${pointCPosition.y - 20}px`;
+        }
+        
+        // Calculate distances between points and update side lengths
+        function updateSideLengths() {
+            const sideAElement = document.getElementById('sideA');
+            const sideBElement = document.getElementById('sideB');
+            const sideCElement = document.getElementById('sideC');
+            const verificationElement = document.getElementById('verification');
+            
+            // Calculate side lengths using distance formula
+            const sideA = Math.sqrt(
+                Math.pow(pointCPosition.x - pointAPosition.x, 2) + 
+                Math.pow(pointCPosition.y - pointAPosition.y, 2)
+            );
+            
+            const sideB = Math.sqrt(
+                Math.pow(pointBPosition.x - pointCPosition.x, 2) + 
+                Math.pow(pointBPosition.y - pointCPosition.y, 2)
+            );
+            
+            const sideC = Math.sqrt(
+                Math.pow(pointBPosition.x - pointAPosition.x, 2) + 
+                Math.pow(pointBPosition.y - pointAPosition.y, 2)
+            );
+            
+            // Update elements
+            sideAElement.textContent = sideA.toFixed(2);
+            sideBElement.textContent = sideB.toFixed(2);
+            sideCElement.textContent = sideC.toFixed(2);
+            
+            // Verify the theorem: a² + b² = c²
+            const aSquared = Math.pow(sideA, 2);
+            const bSquared = Math.pow(sideB, 2);
+            const cSquared = Math.pow(sideC, 2);
+            
+            verificationElement.textContent = 
+                `${aSquared.toFixed(2)} + ${bSquared.toFixed(2)} = ${(aSquared + bSquared).toFixed(2)} ≈ ${cSquared.toFixed(2)}`;
+        }
+        
+        // Draw the triangle on the canvas
+        function drawTriangle() {
+            // Clear the canvas
+            triangleCtx.clearRect(0, 0, triangleCanvas.width, triangleCanvas.height);
+            
+            // Draw the right angle indicator
+            triangleCtx.strokeStyle = '#6b7280';
+            triangleCtx.lineWidth = 1;
+            const rightAngleSize = 15;
+            
+            triangleCtx.beginPath();
+            triangleCtx.moveTo(pointCPosition.x, pointCPosition.y);
+            triangleCtx.lineTo(pointCPosition.x + rightAngleSize, pointCPosition.y);
+            triangleCtx.lineTo(pointCPosition.x + rightAngleSize, pointCPosition.y + rightAngleSize);
+            triangleCtx.stroke();
+            
+            // Draw the triangle
+            triangleCtx.beginPath();
+            triangleCtx.moveTo(pointAPosition.x, pointAPosition.y);
+            triangleCtx.lineTo(pointCPosition.x, pointCPosition.y);
+            triangleCtx.lineTo(pointBPosition.x, pointBPosition.y);
+            triangleCtx.lineTo(pointAPosition.x, pointAPosition.y);
+            
+            triangleCtx.strokeStyle = '#4c1d95';
+            triangleCtx.lineWidth = 2;
+            triangleCtx.stroke();
+            
+            // Draw the side labels
+            triangleCtx.font = '16px sans-serif';
+            triangleCtx.fillStyle = '#4c1d95';
+            
+            // Position side labels at the midpoints of the sides
+            const sideAMidX = (pointAPosition.x + pointCPosition.x) / 2;
+            const sideAMidY = (pointAPosition.y + pointCPosition.y) / 2;
+            triangleCtx.fillText('a', sideAMidX - 15, sideAMidY);
+            
+            const sideBMidX = (pointCPosition.x + pointBPosition.x) / 2;
+            const sideBMidY = (pointCPosition.y + pointBPosition.y) / 2;
+            triangleCtx.fillText('b', sideBMidX, sideBMidY - 10);
+            
+            const sideCMidX = (pointAPosition.x + pointBPosition.x) / 2;
+            const sideCMidY = (pointAPosition.y + pointBPosition.y) / 2;
+            triangleCtx.fillText('c', sideCMidX, sideCMidY + 20);
+            
+            // Draw squares on each side to visualize a²+b²=c²
+            drawSquaresOnSides();
+        }
+        
+        // Draw squares on the sides of the triangle
+        function drawSquaresOnSides() {
+            // Calculate side vectors
+            const sideAVectorX = pointCPosition.x - pointAPosition.x;
+            const sideAVectorY = pointCPosition.y - pointAPosition.y;
+            const sideBVectorX = pointBPosition.x - pointCPosition.x;
+            const sideBVectorY = pointBPosition.y - pointCPosition.y;
+            const sideCVectorX = pointBPosition.x - pointAPosition.x;
+            const sideCVectorY = pointBPosition.y - pointAPosition.y;
+            
+            // Draw square on side A (with transparency)
+            triangleCtx.fillStyle = 'rgba(239, 68, 68, 0.2)'; // red
+            drawSquareFromVector(
+                pointAPosition.x, pointAPosition.y,
+                sideAVectorX, sideAVectorY
+            );
+            
+            // Draw square on side B (with transparency)
+            triangleCtx.fillStyle = 'rgba(16, 185, 129, 0.2)'; // green
+            drawSquareFromVector(
+                pointCPosition.x, pointCPosition.y,
+                sideBVectorX, sideBVectorY
+            );
+            
+            // Draw square on side C (with transparency)
+            triangleCtx.fillStyle = 'rgba(59, 130, 246, 0.2)'; // blue
+            drawSquareFromVector(
+                pointAPosition.x, pointAPosition.y,
+                sideCVectorX, sideCVectorY
+            );
+        }
+        
+        // Helper function to draw a square from a vector
+        function drawSquareFromVector(startX, startY, vx, vy) {
+            // Create perpendicular vector (-vy, vx)
+            const perpX = -vy;
+            const perpY = vx;
+            
+            triangleCtx.beginPath();
+            triangleCtx.moveTo(startX, startY);
+            triangleCtx.lineTo(startX + vx, startY + vy);
+            triangleCtx.lineTo(startX + vx + perpX, startY + vy + perpY);
+            triangleCtx.lineTo(startX + perpX, startY + perpY);
+            triangleCtx.closePath();
+            triangleCtx.fill();
+            triangleCtx.strokeStyle = '#4c1d95';
+            triangleCtx.lineWidth = 1;
+            triangleCtx.stroke();
+        }
+        
+        // Maintain the right angle at point C when moving points
+        function enforceRightAngle() {
+            // Calculate vectors from C to A and C to B
+            const vectorCAx = pointAPosition.x - pointCPosition.x;
+            const vectorCAy = pointAPosition.y - pointCPosition.y;
+            const vectorCBx = pointBPosition.x - pointCPosition.x;
+            const vectorCBy = pointBPosition.y - pointCPosition.y;
+            
+            // Calculate dot product of the vectors
+            const dotProduct = vectorCAx * vectorCBx + vectorCAy * vectorCBy;
+            
+            // If dot product is not close to zero, adjust point B
+            if (Math.abs(dotProduct) > 0.0001) {
+                // Calculate the projection of CB onto CA
+                const projectionScalar = dotProduct / (vectorCAx * vectorCAx + vectorCAy * vectorCAy);
+                
+                // Calculate the projection vector
+                const projectionX = projectionScalar * vectorCAx;
+                const projectionY = projectionScalar * vectorCAy;
+                
+                // Calculate the perpendicular vector
+                const perpX = vectorCBx - projectionX;
+                const perpY = vectorCBy - projectionY;
+                
+                // Update point B position to maintain perpendicularity
+                pointBPosition.x = pointCPosition.x + perpX;
+                pointBPosition.y = pointCPosition.y + perpY;
+            }
+        }
+        
+        // Event handlers for dragging points
+        function setupDraggablePoints() {
+            const pointElements = [
+                document.getElementById('pointA'),
+                document.getElementById('pointB'),
+                document.getElementById('pointC')
+            ];
+            
+            const canvasContainer = document.querySelector('.canvas-container');
+            
+            pointElements.forEach((point, index) => {
+                // Mouse events
+                point.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    currentPoint = index;
+                    e.preventDefault();
+                });
+                
+                // Touch events
+                point.addEventListener('touchstart', (e) => {
+                    isDragging = true;
+                    currentPoint = index;
+                    e.preventDefault();
+                }, { passive: false });
+            });
+            
+            // Mouse events
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const canvasRect = canvasContainer.getBoundingClientRect();
+                const offsetX = e.clientX - canvasRect.left;
+                const offsetY = e.clientY - canvasRect.top;
+                
+                updatePointPosition(offsetX, offsetY);
+            });
+            
+            document.addEventListener('mouseup', () => {
+                isDragging = false;
+                currentPoint = null;
+            });
+            
+            // Touch events
+            document.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                
+                const touch = e.touches[0];
+                const canvasRect = canvasContainer.getBoundingClientRect();
+                const offsetX = touch.clientX - canvasRect.left;
+                const offsetY = touch.clientY - canvasRect.top;
+                
+                updatePointPosition(offsetX, offsetY);
+                e.preventDefault();
+            }, { passive: false });
+            
+            document.addEventListener('touchend', () => {
+                isDragging = false;
+                currentPoint = null;
+            });
+        }
+        
+        // Update the position of the currently dragged point
+        function updatePointPosition(x, y) {
+            // Constrain to canvas boundaries
+            x = Math.max(canvasPadding, Math.min(x, triangleCanvas.width - canvasPadding));
+            y = Math.max(canvasPadding, Math.min(y, triangleCanvas.height - canvasPadding));
+            
+            if (currentPoint === 0) { // Point A
+                pointAPosition.x = x;
+                pointAPosition.y = y;
+                
+                // Ensure point C stays at the same x as point A
+                pointCPosition.x = pointAPosition.x;
+            } else if (currentPoint === 1) { // Point B
+                pointBPosition.x = x;
+                pointBPosition.y = y;
+            } else if (currentPoint === 2) { // Point C
+                pointCPosition.x = x;
+                pointCPosition.y = y;
+                
+                // Ensure point A stays at the same x as point C
+                pointAPosition.x = pointCPosition.x;
+            }
+            
+            enforceRightAngle();
+            updateDOMPoints();
+            drawTriangle();
+            updateSideLengths();
+        }
+        
+        // Initialize the exercise module
+        function setupExerciseModule() {
+            const exerciseVisual = document.getElementById('exerciseVisual');
+            const exerciseCtx = exerciseVisual.getContext('2d');
+            const checkAnswerBtn = document.getElementById('checkAnswer');
+            const newExerciseBtn = document.getElementById('newExercise');
+            
+            // Set canvas dimensions
+            exerciseVisual.width = exerciseVisual.clientWidth;
+            exerciseVisual.height = exerciseVisual.clientHeight;
+            
+            // Generate a new exercise
+            function generateExercise() {
+                // Decide which side to find (a, b, or c)
+                const types = ['findC', 'findA', 'findB'];
+                exerciseType = types[Math.floor(Math.random() * types.length)];
+                
+                // Generate integer values for the sides
+                if (exerciseType === 'findC') {
+                    // Find hypotenuse: generate a and b, calculate c
+                    exerciseValueA = Math.floor(Math.random() * 10) + 1;
+                    exerciseValueB = Math.floor(Math.random() * 10) + 1;
+                    exerciseValueC = Math.sqrt(exerciseValueA * exerciseValueA + exerciseValueB * exerciseValueB);
+                } else if (exerciseType === 'findA' || exerciseType === 'findB') {
+                    // Find leg: generate a Pythagorean triple to ensure integer results
+                    const triples = [
+                        [3, 4, 5],
+                        [5, 12, 13],
+                        [6, 8, 10],
+                        [8, 15, 17],
+                        [9, 12, 15]
+                    ];
+                    const triple = triples[Math.floor(Math.random() * triples.length)];
+                    
+                    if (exerciseType === 'findA') {
+                        exerciseValueB = triple[1];
+                        exerciseValueC = triple[2];
+                        exerciseValueA = triple[0];
+                    } else {
+                        exerciseValueA = triple[0];
+                        exerciseValueC = triple[2];
+                        exerciseValueB = triple[1];
+                    }
+                }
+                
+                // Update the exercise display
+                updateExerciseDisplay();
+            }
+            
+            // Update the display with current exercise values
+            function updateExerciseDisplay() {
+                const exerciseDescription = document.getElementById('exerciseDescription');
+                const exerciseSideA = document.getElementById('exerciseSideA');
+                const exerciseSideB = document.getElementById('exerciseSideB');
+                const exerciseAnswer = document.getElementById('exerciseAnswer');
+                const exerciseFeedback = document.getElementById('exerciseFeedback');
+                
+                // Clear previous feedback
+                exerciseFeedback.classList.add('hidden');
+                exerciseAnswer.value = '';
+                
+                // Set the description based on the exercise type
+                if (exerciseType === 'findC') {
+                    exerciseDescription.textContent = 'Bereken de schuine zijde (c) van de rechthoekige driehoek.';
+                    exerciseSideA.textContent = exerciseValueA;
+                    exerciseSideB.textContent = exerciseValueB;
+                    exerciseAnswer.placeholder = "c = ?";
+                } else if (exerciseType === 'findA') {
+                    exerciseDescription.textContent = 'Bereken rechthoekszijde a van de rechthoekige driehoek.';
+                    exerciseSideA.textContent = "?";
+                    exerciseSideB.textContent = exerciseValueB;
+                    exerciseAnswer.placeholder = "a = ?";
+                } else { // findB
+                    exerciseDescription.textContent = 'Bereken rechthoekszijde b van de rechthoekige driehoek.';
+                    exerciseSideA.textContent = exerciseValueA;
+                    exerciseSideB.textContent = "?";
+                    exerciseAnswer.placeholder = "b = ?";
+                }
+                
+                // Draw the exercise visual
+                drawExerciseVisual();
+            }
+            
+            // Draw the exercise visualization
+            function drawExerciseVisual() {
+                const padding = 20;
+                const width = exerciseVisual.width;
+                const height = exerciseVisual.height;
+                
+                // Clear the canvas
+                exerciseCtx.clearRect(0, 0, width, height);
+                
+                // Calculate the triangle dimensions and position (to fit within canvas)
+                const scale = 0.4 * Math.min(width, height) / Math.max(exerciseValueA, exerciseValueB, exerciseValueC);
+                
+                const pointA = { x: padding, y: height - padding };
+                const pointC = { x: padding, y: height - padding - exerciseValueA * scale };
+                const pointB = { x: padding + exerciseValueB * scale, y: height - padding - exerciseValueA * scale };
+                
+                // Draw the right angle indicator
+                exerciseCtx.strokeStyle = '#6b7280';
+                exerciseCtx.lineWidth = 1;
+                const rightAngleSize = 10;
+                
+                exerciseCtx.beginPath();
+                exerciseCtx.moveTo(pointC.x, pointC.y);
+                exerciseCtx.lineTo(pointC.x + rightAngleSize, pointC.y);
+                exerciseCtx.lineTo(pointC.x + rightAngleSize, pointC.y + rightAngleSize);
+                exerciseCtx.stroke();
+                
+                // Draw the triangle
+                exerciseCtx.beginPath();
+                exerciseCtx.moveTo(pointA.x, pointA.y);
+                exerciseCtx.lineTo(pointC.x, pointC.y);
+                exerciseCtx.lineTo(pointB.x, pointB.y);
+                exerciseCtx.lineTo(pointA.x, pointA.y);
+                
+                exerciseCtx.strokeStyle = '#4c1d95';
+                exerciseCtx.lineWidth = 2;
+                exerciseCtx.stroke();
+                
+                // Draw the side labels
+                exerciseCtx.font = '16px sans-serif';
+                exerciseCtx.fillStyle = '#4c1d95';
+                
+                // Side a label
+                const sideAMidX = (pointA.x + pointC.x) / 2 - 15;
+                const sideAMidY = (pointA.y + pointC.y) / 2;
+                exerciseCtx.fillText('a', sideAMidX, sideAMidY);
+                
+                // Side b label
+                const sideBMidX = (pointC.x + pointB.x) / 2;
+                const sideBMidY = (pointC.y + pointB.y) / 2 - 10;
+                exerciseCtx.fillText('b', sideBMidX, sideBMidY);
+                
+                // Side c label
+                const sideCMidX = (pointA.x + pointB.x) / 2;
+                const sideCMidY = (pointA.y + pointB.y) / 2 + 15;
+                exerciseCtx.fillText('c', sideCMidX, sideCMidY);
+                
+                // Add a question mark on the unknown side
+                exerciseCtx.font = 'bold 18px sans-serif';
+                exerciseCtx.fillStyle = '#ef4444';
+                
+                if (exerciseType === 'findC') {
+                    exerciseCtx.fillText('?', sideCMidX + 15, sideCMidY);
+                } else if (exerciseType === 'findA') {
+                    exerciseCtx.fillText('?', sideAMidX - 10, sideAMidY);
+                } else { // findB
+                    exerciseCtx.fillText('?', sideBMidX + 15, sideBMidY);
+                }
+            }
+            
+            // Check the user's answer
+            function checkAnswer() {
+                const userAnswer = parseFloat(document.getElementById('exerciseAnswer').value);
+                const exerciseFeedback = document.getElementById('exerciseFeedback');
+                
+                // Get the expected answer based on the exercise type
+                let expectedAnswer;
+                if (exerciseType === 'findC') {
+                    expectedAnswer = Math.sqrt(exerciseValueA * exerciseValueA + exerciseValueB * exerciseValueB);
+                } else if (exerciseType === 'findA') {
+                    expectedAnswer = Math.sqrt(exerciseValueC * exerciseValueC - exerciseValueB * exerciseValueB);
+                } else { // findB
+                    expectedAnswer = Math.sqrt(exerciseValueC * exerciseValueC - exerciseValueA * exerciseValueA);
+                }
+                
+                // Check if the answer is correct (within a small margin for rounding errors)
+                const isCorrect = Math.abs(userAnswer - expectedAnswer) < 0.1;
+                
+                // Show feedback
+                exerciseFeedback.classList.remove('hidden');
+                if (isCorrect) {
+                    exerciseFeedback.classList.add('feedback-correct', 'bg-green-50');
+                    exerciseFeedback.classList.remove('feedback-incorrect', 'bg-red-50');
+                    exerciseFeedback.textContent = `Correct! Het antwoord is inderdaad ${expectedAnswer.toFixed(2)}.`;
+                } else {
+                    exerciseFeedback.classList.add('feedback-incorrect', 'bg-red-50');
+                    exerciseFeedback.classList.remove('feedback-correct', 'bg-green-50');
+                    exerciseFeedback.innerHTML = `Helaas! Het juiste antwoord is ${expectedAnswer.toFixed(2)}.<br>
+                        Probeer het nog eens en gebruik de formules in de helper.`;
+                }
+            }
+            
+            // Event listeners
+            checkAnswerBtn.addEventListener('click', checkAnswer);
+            newExerciseBtn.addEventListener('click', generateExercise);
+            
+            // Initialize with a first exercise
+            generateExercise();
+        }
+        
+        // Initialize the golden ratio visualization
+        function setupGoldenRatio() {
+            const goldenRatio = (1 + Math.sqrt(5)) / 2; // φ ≈ 1.618
+            const showConstructionBtn = document.getElementById('showGoldenConstruction');
+            const showSpiralBtn = document.getElementById('showGoldenSpiral');
+            const resetBtn = document.getElementById('resetGoldenRatio');
+            
+            let constructionStep = 0;
+            const maxSteps = 6;
+            
+            // Draw the initial square
+            function drawInitialState() {
+                const width = goldenRatioCanvas.width;
+                const height = goldenRatioCanvas.height;
+                const size = Math.min(width, height) * 0.7;
+                const startX = (width - size) / 2;
+                const startY = (height - size) / 2;
+                
+                goldenRatioCtx.clearRect(0, 0, width, height);
+                
+                // Draw a square
+                goldenRatioCtx.beginPath();
+                goldenRatioCtx.rect(startX, startY, size, size);
+                goldenRatioCtx.strokeStyle = '#4c1d95';
+                goldenRatioCtx.lineWidth = 2;
+                goldenRatioCtx.stroke();
+                
+                // Label
+                goldenRatioCtx.font = '16px sans-serif';
+                goldenRatioCtx.fillStyle = '#4c1d95';
+                goldenRatioCtx.fillText('1', startX + size / 2, startY + size + 20);
+                goldenRatioCtx.fillText('1', startX - 20, startY + size / 2);
+                
+                return { startX, startY, size };
+            }
+            
+            // Step through the golden ratio construction
+            function showConstruction() {
+                if (constructionStep >= maxSteps) {
+                    constructionStep = 0;
+                }
+                
+                const { startX, startY, size } = drawInitialState();
+                constructionStep++;
+                
+                if (constructionStep >= 1) {
+                    // Step 1: Find midpoint of bottom side
+                    const midpointX = startX + size / 2;
+                    const midpointY = startY + size;
+                    
+                    goldenRatioCtx.beginPath();
+                    goldenRatioCtx.arc(midpointX, midpointY, 3, 0, Math.PI * 2);
+                    goldenRatioCtx.fillStyle = '#ef4444';
+                    goldenRatioCtx.fill();
+                    
+                    goldenRatioCtx.font = '14px sans-serif';
+                    goldenRatioCtx.fillStyle = '#ef4444';
+                    goldenRatioCtx.fillText('M', midpointX + 5, midpointY + 5);
+                }
+                
+                if (constructionStep >= 2) {
+                    // Step 2: Draw line from midpoint to top-right corner
+                    const midpointX = startX + size / 2;
+                    const midpointY = startY + size;
+                    const cornerX = startX + size;
+                    const cornerY = startY;
+                    
+                    goldenRatioCtx.beginPath();
+                    goldenRatioCtx.moveTo(midpointX, midpointY);
+                    goldenRatioCtx.lineTo(cornerX, cornerY);
+                    goldenRatioCtx.strokeStyle = '#ef4444';
+                    goldenRatioCtx.lineWidth = 1;
+                    goldenRatioCtx.stroke();
+                    
+                    // Label the diagonal
+                    const diagLength = Math.sqrt(Math.pow(cornerX - midpointX, 2) + Math.pow(cornerY - midpointY, 2));
+                    goldenRatioCtx.fillStyle = '#ef4444';
+                    goldenRatioCtx.fillText(`√5/2`, (midpointX + cornerX) / 2 + 10, (midpointY + cornerY) / 2);
+                }
+                
+                if (constructionStep >= 3) {
+                    // Step 3: Use Pythagoras to extend the rectangle
+                    // The length of the extension will be (√5 - 1)/2 * size
+                    const extensionLength = ((Math.sqrt(5) - 1) / 2) * size;
+                    
+                    goldenRatioCtx.beginPath();
+                    goldenRatioCtx.rect(startX + size, startY, extensionLength, size);
+                    goldenRatioCtx.strokeStyle = '#0891b2';
+                    goldenRatioCtx.lineWidth = 2;
+                    goldenRatioCtx.stroke();
+                    
+                    // Label the extension
+                    goldenRatioCtx.fillStyle = '#0891b2';
+                    goldenRatioCtx.fillText(`φ-1`, startX + size + extensionLength / 2, startY + size + 20);
+                }
+                
+                if (constructionStep >= 4) {
+                    // Step 4: Label the golden rectangle
+                    goldenRatioCtx.beginPath();
+                    const extensionLength = ((Math.sqrt(5) - 1) / 2) * size;
+                    const goldenWidth = size + extensionLength;
+                    
+                    goldenRatioCtx.rect(startX, startY, goldenWidth, size);
+                    goldenRatioCtx.strokeStyle = '#8b5cf6';
+                    goldenRatioCtx.lineWidth = 3;
+                    goldenRatioCtx.stroke();
+                    
+                    goldenRatioCtx.fillStyle = '#8b5cf6';
+                    goldenRatioCtx.font = '18px sans-serif';
+                    goldenRatioCtx.fillText(`Gulden Rechthoek (1:φ)`, startX + goldenWidth / 2 - 80, startY - 10);
+                }
+                
+                if (constructionStep >= 5) {
+                    // Step 5: Show the formula and calculation
+                    goldenRatioCtx.fillStyle = '#000';
+                    goldenRatioCtx.font = '14px sans-serif';
+                    goldenRatioCtx.fillText(`φ = (1 + √5) / 2 ≈ ${goldenRatio.toFixed(3)}`, 
+                                          startX, startY + size + 40);
+                    goldenRatioCtx.fillText(`De verhouding van breedte tot hoogte is φ:1`, 
+                                          startX, startY + size + 60);
+                }
+            }
+            
+            // Draw the golden spiral
+            function drawGoldenSpiral() {
+                const width = goldenRatioCanvas.width;
+                const height = goldenRatioCanvas.height;
+                const size = Math.min(width, height) * 0.7;
+                const startX = (width - size) / 2;
+                const startY = (height - size) / 2;
+                
+                goldenRatioCtx.clearRect(0, 0, width, height);
+                
+                // Draw the golden rectangles
+                let currentX = startX;
+                let currentY = startY;
+                let currentSize = size;
+                let currentRot = 0; // rotation in radians
+                
+                // Colors for the spiral segments
+                const colors = ['#4c1d95', '#8b5cf6', '#ec4899', '#f97316', '#84cc16', '#0891b2'];
+                
+                // Draw the squares of the golden rectangle subdivision
+                for (let i = 0; i < 6; i++) {
+                    goldenRatioCtx.beginPath();
+                    goldenRatioCtx.rect(currentX, currentY, currentSize, currentSize);
+                    goldenRatioCtx.strokeStyle = colors[i % colors.length];
+                    goldenRatioCtx.lineWidth = 2;
+                    goldenRatioCtx.stroke();
+                    
+                    // Draw a quarter circle (spiral segment)
+                    goldenRatioCtx.beginPath();
+                    goldenRatioCtx.arc(
+                        currentX + (i % 2 === 0 ? currentSize : 0),
+                        currentY + (i % 2 === 0 ? currentSize : 0),
+                        currentSize,
+                        (i * Math.PI / 2) + Math.PI,
+                        (i * Math.PI / 2) + Math.PI * 1.5
+                    );
+                    goldenRatioCtx.strokeStyle = colors[i % colors.length];
+                    goldenRatioCtx.lineWidth = 2;
+                    goldenRatioCtx.stroke();
+                    
+                    // Update for next square
+                    const newSize = currentSize / goldenRatio;
+                    
+                    if (i % 4 === 0) {
+                        currentX = currentX;
+                        currentY = currentY - newSize;
+                    } else if (i % 4 === 1) {
+                        currentX = currentX + currentSize - newSize;
+                        currentY = currentY;
+                    } else if (i % 4 === 2) {
+                        currentX = currentX;
+                        currentY = currentY + currentSize - newSize;
+                    } else {
+                        currentX = currentX - newSize;
+                        currentY = currentY;
+                    }
+                    
+                    currentSize = newSize;
+                }
+                
+                // Label the golden spiral
+                goldenRatioCtx.fillStyle = '#8b5cf6';
+                goldenRatioCtx.font = '18px sans-serif';
+                goldenRatioCtx.fillText(`Gulden Spiraal`, startX + size / 2 - 60, startY - 10);
+            }
+            
+            // Initialize design examples
+            function setupDesignExamples() {
+                const designContainer = document.getElementById('designContainer');
+                const showLogoBtn = document.getElementById('showLogoDesign');
+                const showPaintingBtn = document.getElementById('showPaintingAnalysis');
+                const showWebBtn = document.getElementById('showWebDesign');
+                
+                function clearDesign() {
+                    designContainer.innerHTML = '';
+                }
+                
+                // Show logo design with golden ratio
+                showLogoBtn.addEventListener('click', () => {
+                    clearDesign();
+                    
+                    // Create logo design
+                    const logoDiv = document.createElement('div');
+                    logoDiv.className = 'w-full h-full flex flex-col items-center justify-center';
+                    
+                    // Logo title
+                    const title = document.createElement('h3');
+                    title.textContent = 'Logo Ontwerp met Gulden Snede';
+                    title.className = 'text-lg font-semibold text-indigo-700 mb-3';
+                    logoDiv.appendChild(title);
+                    
+                    // Logo canvas
+                    const logoCanvas = document.createElement('canvas');
+                    logoCanvas.width = 280;
+                    logoCanvas.height = 200;
+                    logoCanvas.className = 'border border-gray-300';
+                    logoDiv.appendChild(logoCanvas);
+                    
+                    // Draw the logo
+                    const ctx = logoCanvas.getContext('2d');
+                    const centerX = logoCanvas.width / 2;
+                    const centerY = logoCanvas.height / 2;
+                    const size = 80;
+                    
+                    // Draw golden rectangles
+                    const goldenRatio = (1 + Math.sqrt(5)) / 2;
+                    
+                    // First rectangle (horizontal)
+                    ctx.beginPath();
+                    ctx.rect(centerX - size / 2, centerY - size / (2 * goldenRatio), 
+                            size, size / goldenRatio);
+                    ctx.fillStyle = 'rgba(139, 92, 246, 0.6)'; // Purple
+                    ctx.fill();
+                    
+                    // Second rectangle (vertical)
+                    ctx.beginPath();
+                    ctx.rect(centerX - size / (2 * goldenRatio), centerY - size / 2, 
+                            size / goldenRatio, size);
+                    ctx.fillStyle = 'rgba(236, 72, 153, 0.6)'; // Pink
+                    ctx.fill();
+                    
+                    // Overlay text
+                    ctx.font = 'bold 24px Arial';
+                    ctx.fillStyle = '#ffffff';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('φ', centerX, centerY);
+                    
+                    // Description
+                    const desc = document.createElement('p');
+                    desc.className = 'text-sm text-gray-600 mt-3 px-4';
+                    desc.textContent = 'Dit logo gebruikt de gulden snede om de verhoudingen van de rechthoeken ' +
+                        'te bepalen. Hierdoor ontstaat een visueel aantrekkelijk en harmonieus ontwerp.';
+                    logoDiv.appendChild(desc);
+                    
+                    designContainer.appendChild(logoDiv);
+                });
+                
+                // Show painting analysis with golden ratio
+                showPaintingBtn.addEventListener('click', () => {
+                    clearDesign();
+                    
+                    // Create painting analysis
+                    const paintingDiv = document.createElement('div');
+                    paintingDiv.className = 'w-full h-full flex flex-col items-center justify-center';
+                    
+                    // Painting title
+                    const title = document.createElement('h3');
+                    title.textContent = 'Schilderij Analyse met Gulden Snede';
+                    title.className = 'text-lg font-semibold text-indigo-700 mb-3';
+                    paintingDiv.appendChild(title);
+                    
+                    // Painting canvas
+                    const paintingCanvas = document.createElement('canvas');
+                    paintingCanvas.width = 280;
+                    paintingCanvas.height = 200;
+                    paintingCanvas.className = 'border border-gray-300';
+                    paintingDiv.appendChild(paintingCanvas);
+                    
+                    // Draw the painting composition guide
+                    const ctx = paintingCanvas.getContext('2d');
+                    const width = paintingCanvas.width;
+                    const height = paintingCanvas.height;
+                    
+                    // Draw "painting" background
+                    ctx.fillStyle = '#f3f4f6';
+                    ctx.fillRect(0, 0, width, height);
+                    
+                    // Draw golden ratio grid
+                    const goldenRatio = (1 + Math.sqrt(5)) / 2;
+                    
+                    // Vertical lines
+                    const x1 = width / goldenRatio;
+                    const x2 = width - x1;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x1, 0);
+                    ctx.lineTo(x1, height);
+                    ctx.moveTo(x2, 0);
+                    ctx.lineTo(x2, height);
+                    ctx.strokeStyle = 'rgba(139, 92, 246, 0.5)';
+                    ctx.lineWidth = 1;
+                    ctx.stroke();
+                    
+                    // Horizontal lines
+                    const y1 = height / goldenRatio;
+                    const y2 = height - y1;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(0, y1);
+                    ctx.lineTo(width, y1);
+                    ctx.moveTo(0, y2);
+                    ctx.lineTo(width, y2);
+                    ctx.stroke();
+                    
+                    // Draw intersection points (focal points)
+                    const points = [
+                        {x: x1, y: y1}, {x: x2, y: y1},
+                        {x: x1, y: y2}, {x: x2, y: y2}
+                    ];
+                    
+                    points.forEach(point => {
+                        ctx.beginPath();
+                        ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(236, 72, 153, 0.8)';
+                        ctx.fill();
+                    });
+                    
+                    // Draw "subject" at a focal point
+                    const mainPoint = points[1]; // Top right intersection
+                    ctx.beginPath();
+                    ctx.arc(mainPoint.x, mainPoint.y, 20, 0, Math.PI * 2);
+                    ctx.fillStyle = 'rgba(59, 130, 246, 0.7)';
+                    ctx.fill();
+                    
+                    // Description
+                    const desc = document.createElement('p');
+                    desc.className = 'text-sm text-gray-600 mt-3 px-4';
+                    desc.textContent = 'De gulden snede wordt vaak gebruikt in de compositie van schilderijen. ' +
+                        'De snijpunten van deze lijnen vormen natuurlijke focuspunten waarop belangrijke elementen ' +
+                        'worden geplaatst.';
+                    paintingDiv.appendChild(desc);
+                    
+                    designContainer.appendChild(paintingDiv);
+                });
+                
+                // Show web design with golden ratio
+                showWebBtn.addEventListener('click', () => {
+                    clearDesign();
+                    
+                    // Create web design
+                    const webDiv = document.createElement('div');
+                    webDiv.className = 'w-full h-full flex flex-col items-center justify-center';
+                    
+                    // Web design title
+                    const title = document.createElement('h3');
+                    title.textContent = 'Webdesign Verhoudingen';
+                    title.className = 'text-lg font-semibold text-indigo-700 mb-3';
+                    webDiv.appendChild(title);
+                    
+                    // Web design canvas
+                    const webCanvas = document.createElement('canvas');
+                    webCanvas.width = 280;
+                    webCanvas.height = 200;
+                    webCanvas.className = 'border border-gray-300';
+                    webDiv.appendChild(webCanvas);
+                    
+                    // Draw the web design layout
+                    const ctx = webCanvas.getContext('2d');
+                    const width = webCanvas.width;
+                    const height = webCanvas.height;
+                    
+                    // Calculate dimensions based on golden ratio
+                    const goldenRatio = (1 + Math.sqrt(5)) / 2;
+                    const contentWidth = width / goldenRatio;
+                    const sidebarWidth = width - contentWidth;
+                    
+                    // Draw layout
+                    // Header
+                    ctx.fillStyle = '#e0e7ff';
+                    ctx.fillRect(0, 0, width, height / 6);
+                    
+                    // Sidebar
+                    ctx.fillStyle = '#dbeafe';
+                    ctx.fillRect(0, height / 6, sidebarWidth, height * 5/6);
+                    
+                    // Content area
+                    ctx.fillStyle = '#f1f5f9';
+                    ctx.fillRect(sidebarWidth, height / 6, contentWidth, height * 5/6);
+                    
+                    // Labels
+                    ctx.font = '12px Arial';
+                    ctx.fillStyle = '#4a5568';
+                    ctx.textAlign = 'center';
+                    
+                    // Header label
+                    ctx.fillText('Header', width / 2, height / 12);
+                    
+                    // Sidebar label
+                    ctx.fillText('Sidebar', sidebarWidth / 2, height / 2);
+                    ctx.fillText(`1`, sidebarWidth / 2, height / 2 + 15);
+                    
+                    // Content label
+                    ctx.fillText('Content', sidebarWidth + contentWidth / 2, height / 2);
+                    ctx.fillText(`φ`, sidebarWidth + contentWidth / 2, height / 2 + 15);
+                    
+                    // Description
+                    const desc = document.createElement('p');
+                    desc.className = 'text-sm text-gray-600 mt-3 px-4';
+                    desc.textContent = 'De gulden snede kan worden toegepast in webdesign om aantrekkelijke ' +
+                        'verhoudingen te creëren tussen elementen zoals content en sidebar. ' +
+                        'De ratio van ongeveer 1:1.618 is visueel aangenaam voor het menselijk oog.';
+                    webDiv.appendChild(desc);
+                    
+                    designContainer.appendChild(webDiv);
+                });
+                
+                // Show logo design by default
+                showLogoBtn.click();
+            }
+            
+            // Event listeners
+            showConstructionBtn.addEventListener('click', showConstruction);
+            showSpiralBtn.addEventListener('click', drawGoldenSpiral);
+            resetBtn.addEventListener('click', () => {
+                constructionStep = 0;
+                drawInitialState();
+            });
+            
+            // Initialize
+            drawInitialState();
+            setupDesignExamples();
+        }
+        
+        // Initialize everything when window loads
+        window.addEventListener('load', () => {
+            // Scale the triangle canvas to match its container dimensions
+            triangleCanvas.width = triangleCanvas.clientWidth;
+            triangleCanvas.height = triangleCanvas.clientHeight;
+            
+            // Scale the golden ratio canvas
+            goldenRatioCanvas.width = goldenRatioCanvas.clientWidth;
+            goldenRatioCanvas.height = goldenRatioCanvas.clientHeight;
+            
+            // Initialize the triangle with proper starting positions
+            const canvasWidth = triangleCanvas.width;
+            const canvasHeight = triangleCanvas.height;
+            
+            // Adjust triangle points based on canvas size
+            pointAPosition = { x: canvasWidth / 4, y: canvasHeight * 3/4 };
+            pointBPosition = { x: canvasWidth * 3/4, y: canvasHeight * 3/4 };
+            pointCPosition = { x: canvasWidth / 4, y: canvasHeight / 4 };
+            
+            // Update DOM positions
+            updateDOMPoints();
+            
+            // Draw triangle and set up all interactions
+            drawTriangle();
+            updateSideLengths();
+            setupDraggablePoints();
+            setupExerciseModule();
+            setupGoldenRatio();
+        });
+        
+        // Update canvas size on window resize
+        window.addEventListener('resize', () => {
+            // Scale the triangle canvas
+            triangleCanvas.width = triangleCanvas.clientWidth;
+            triangleCanvas.height = triangleCanvas.clientHeight;
+            
+            // Scale the golden ratio canvas
+            goldenRatioCanvas.width = goldenRatioCanvas.clientWidth;
+            goldenRatioCanvas.height = goldenRatioCanvas.clientHeight;
+            
+            // Redraw everything
+            drawTriangle();
+            
+            // Redraw the exercise visual
+            const exerciseVisual = document.getElementById('exerciseVisual');
+            if (exerciseVisual) {
+                exerciseVisual.width = exerciseVisual.clientWidth;
+                exerciseVisual.height = exerciseVisual.clientHeight;
+                document.getElementById('newExercise').click();
+            }
+            
+            // Reset golden ratio
+            document.getElementById('resetGoldenRatio').click();
+        });
+    </script>
+</body>
+</html>
+    
