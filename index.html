@@ -9,6 +9,23 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+<div class="menu-backdrop"></div>
+<nav class="navbar">
+    <div class="nav-container">
+        <div class="logo">TOP dag 2025</div>
+        <ul class="nav-links">
+            <li><a href="#section1">Generatieve AI</a></li>
+            <li><a href="#section2">Use Case</a></li>
+            <li><a href="#section3">Extra Voorbeelden</a></li>
+        </ul>
+        <div class="burger">
+            <div class="line1"></div>
+            <div class="line2"></div>
+            <div class="line3"></div>
+        </div>
+    </div>
+</nav>
+
 <div class="container">
     <h1 class="heading-main">TOP dag - 2025: Generatieve AI in het onderwijs</h1>
     <div id="section1">
@@ -28,13 +45,13 @@
         <h4 class="heading-small">IQ test LLM's</h4>
         <p class="p-block">
             <a href="https://www.trackingai.org/home" rel="noopener noreferrer" class="link">
-                <img src="./assets/images/IQ-test.png" alt="IQ test" class="img-card">
+                <img src="./assets/images/IQ-test.webp" alt="IQ test" class="img-card">
             </a>
         </p>
         <h4 class="heading-small">Chatbot Arena</h4>
         <p class="p-block">
             <a href="https://lmarena.ai/" rel="noopener noreferrer" class="link">
-                <img src="./assets/images/chatbot_arena.png" alt="Chatbot Arena" class="img-card">
+                <img src="./assets/images/chatbot_arena.webp" alt="Chatbot Arena" class="img-card">
             </a>
         </p>
         <ul class="space-list">
@@ -57,7 +74,9 @@
             <li>
                 <strong>Google</strong>
                 <ul>
-                    <li><a href="https://gemini.google.com/" class="link">Gemini 2.5 Pro Exp. (Vision),
+                    <li>Gemini: <a href="https://gemini.google.com/" class="link">Gemini 2.5 Pro Exp. (Vision),
+                        Gemini 2.5 Pro Exp., Gemini 2.0 Flash Thinking Exp.</a></li>
+                    <li>AIstudio: <a href="https://aistudio.google.com/" class="link">Gemini 2.5 Pro Exp. (Vision),
                         Gemini 2.5 Pro Exp., Gemini 2.0 Flash Thinking Exp.</a></li>
                 </ul>
             </li>
@@ -216,14 +235,14 @@
                 <a href="assets/docs/20250520_064731_pythagoras_in_het_dagelijks_leven.md">MarkDown</a>
             </li>
         </ul>
-        <h3>2: Genereer korte inhoud voor een PPT-presentatie</h3>
+        <h3 class="heading-sub">2: Genereer korte inhoud voor een PPT-presentatie</h3>
         <ul class="list">
             <li>Importeer cursusteksten in <a href="https://notebooklm.google.com/">NotebookLM</a><br>
-                <img src="assets/images/notebookLM_samenvatting_ppt.png" alt="NotebookLM" class="img-card">
+                <img src="assets/images/notebookLM_samenvatting_ppt.webp" alt="NotebookLM" class="img-card">
             </li>
             <li>Genereer eventueel andere nota's, studiemateriaal, vragen + antwoorden,mindmap, ...</li>
         </ul>
-        <h3>3: Genereer een podcast</h3>
+        <h3 class="heading-sub">3: Genereer een podcast</h3>
         <ul class="list">
             <li>Genereer een podcast voor beide documenten.<br><b>Prompt</b>:<br>
                 <span class="prompt"> Verwelkom onze leerlingen van Kogeka scholengemeenschap in Geel.<br>
@@ -245,7 +264,7 @@
             <a href="assets/audio/Pythagoras_aso.mp3"> Download audio </a>
         </figure>
         </p>
-        <h3>4: Interactieve oefenpagina</h3>
+        <h3 class="heading-sub">4: Interactieve oefenpagina</h3>
         <p>Maak een interactieve oefenpagina. </p>
         <ul class="list">
             <li><b>Prompt</b>:<br>
@@ -265,7 +284,7 @@
             <li><a href="https://www.genspark.ai/">Genspark</a>: resultaat na 1 iterate: <a
                     href="pythagoras_genspark.html">pythagoras_genspark.html</a></li>
         </ul>
-        <h3>5: Interactieve testpagina met flashcards</h3>
+        <h3 class="heading-sub">5: Interactieve testpagina met flashcards</h3>
         <p>Maak een interactieve webpagina met flashcards </p>
         <ul class="list">
             <li><b>Prompt:</b><br>
@@ -282,7 +301,7 @@
             </li>
 
         </ul>
-        <h3>6: Chat with my course</h3>
+        <h3 class="heading-sub">6: Chat with my course</h3>
         <p>Maak een lokale chat-applicatie die communiceert met je cursus</p>
         <ul class="list">
             <li>Download <a href="https://anythingllm.com/">AnythingLLM</a></li>
@@ -291,7 +310,7 @@
     </div>
     <div id="section3">
         <h2 class="heading-section">Extra voorbeelden</h2>
-        <h3>Afbeeldingen en video's genereren</h3>
+        <h3 class="heading-sub">Afbeeldingen en video's genereren</h3>
         <p>
             Met de meeste online AI-chatbots kan je tegenwoordig een (beperkt) aantal afbeeldingen genereren.<br>
             Hier nog enkele extra links die het proberen waard zijn.
@@ -312,6 +331,7 @@
             <li><a href="https://lovable.dev/">Lovable</a></li>
             <li><a href="https://bolt.new/">Bold</a></li>
             <li><a href="https://www.trae.ai/">Trae</a> (gratis)</li>
+            <li><a href="https://https://firebase.studio/">Firebase studio</a> (gratis)</li>
             <li><a href="https://codellm.abacus.ai/">CodeLLM</a> (onderdeel van ChatLLM)</li>
         </ul>
         <p>
@@ -321,10 +341,12 @@
             <li><a href="https://itf-webp.netlify.app/">Fast Image Conversion & Editing Tool</a></li>
             <li><a href="https://css-shades.netlify.app/">CSS kleurenschema</a></li>
             <li><a href="https://itf-spellchecker.vercel.app/">Spellings- en Grammaticacorrector</a></li>
-            <li><a href="https://itf-tv.vercel.app/">TV simulator</a></li>
+            <li><a href="https://maaltafels.netlify.app/">Maaltafels</a></li>
+            <li><a href="https://itf-tv.vercel.app/">TV simulator</a> (just for fun 😉)</li>
         </ul>
     </div>
 </div>
+<button id="back-to-top" aria-label="Back to top"><i class="fas fa-arrow-up"></i></button>
 <script src="script.js"></script>
 </body>
 </html>
